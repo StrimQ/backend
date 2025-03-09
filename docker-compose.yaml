@@ -1,0 +1,93 @@
+services:
+  kafka-0:
+    image: docker.io/bitnami/kafka:3.9.0
+    environment:
+      # KRaft settings
+      KAFKA_CFG_NODE_ID: '0'
+      KAFKA_CFG_PROCESS_ROLES: 'controller,broker'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '0@kafka-0:9093,1@kafka-1:9093'
+      KAFKA_KRAFT_CLUSTER_ID: 'abcdefghijklmnopqrstuv'
+      # Listeners
+      KAFKA_CFG_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT://:9092'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+    volumes:
+      - 'kafka0_data:/bitnami/kafka'
+  kafka-1:
+    image: docker.io/bitnami/kafka:3.9.0
+    environment:
+      # KRaft settings
+      KAFKA_CFG_NODE_ID: '1'
+      KAFKA_CFG_PROCESS_ROLES: 'controller,broker'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '0@kafka-0:9093,1@kafka-1:9093'
+      KAFKA_KRAFT_CLUSTER_ID: 'abcdefghijklmnopqrstuv'
+      # Listeners
+      KAFKA_CFG_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT://:9092'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+    volumes:
+      - 'kafka1_data:/bitnami/kafka'
+  schema-registry:
+    image: docker.io/bitnami/schema-registry:7.8.0
+    ports:
+      - '8081:8081'
+    depends_on:
+      - kafka-0
+      - kafka-1
+    environment:
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
+      SCHEMA_REGISTRY_KAFKA_BROKERS: 'PLAINTEXT://kafka-0:9092,PLAINTEXT://kafka-1:9092'
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.9.0
+    ports:
+      - '8083:8083'
+    depends_on:
+      - kafka-0
+      - kafka-1
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'kafka-0:9092,kafka-1:9092'
+      CONNECT_GROUP_ID: 'connect-cluster'
+      CONNECT_CONFIG_STORAGE_TOPIC: 'connect-configs'
+      CONNECT_OFFSET_STORAGE_TOPIC: 'connect-offsets'
+      CONNECT_STATUS_STORAGE_TOPIC: 'connect-status'
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect'
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - schema-registry
+      - kafka-connect
+    environment:
+      KAFKA_CLUSTERS_0_NAME: 'local'
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka-0:9092'
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: 'http://schema-registry:8081'
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: 'local'
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: 'http://kafka-connect:8083'
+      DYNAMIC_CONFIG_ENABLED: 'true'
+  # PostgreSQL 16 - Relational database
+  postgresql:
+    image: postgres:17.4
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: strimqadmin@1234
+    ports:
+      - '5432:5432'
+    volumes:
+      - 'postgresql_data:/var/lib/postgresql/data'
+volumes:
+  kafka0_data:
+    driver: local
+  kafka1_data:
+    driver: local
+  postgresql_data:
+    driver: local
