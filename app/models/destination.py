@@ -14,6 +14,7 @@ class Destination(DeclarativeBase):
     name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     tenant = relationship("Tenant", back_populates="destinations")
     tags = relationship("DestinationTag", back_populates="destination")
@@ -33,6 +34,7 @@ class DestinationTag(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     destination = relationship("Destination", back_populates="tags")
 
@@ -48,6 +50,7 @@ class DestinationAppConfig(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     destination = relationship("Destination", back_populates="app_configs")
 
@@ -65,6 +68,7 @@ class DestinationKCConnector(DeclarativeBase):
     version = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     destination = relationship("Destination", back_populates="kc_connectors")
     configs = relationship("DestinationKCConfig", back_populates="kc_connector")
@@ -81,5 +85,6 @@ class DestinationKCConfig(DeclarativeBase):
     value = Column(Text)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     kc_connector = relationship("DestinationKCConnector", back_populates="configs")

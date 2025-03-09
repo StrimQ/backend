@@ -18,6 +18,7 @@ class Pipeline(DeclarativeBase):
     name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     tenant = relationship("Tenant", back_populates="pipelines")
     source = relationship("Source", back_populates="pipelines")
@@ -42,6 +43,7 @@ class PipelineTag(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     pipeline = relationship("Pipeline", back_populates="tags")
 
@@ -57,6 +59,7 @@ class PipelineAppConfig(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     pipeline = relationship("Pipeline", back_populates="app_configs")
 
@@ -73,6 +76,7 @@ class PipelineSourceAppTable(DeclarativeBase):
     )
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     pipeline = relationship("Pipeline", back_populates="source_app_table_associations")
     source_app_table = relationship(

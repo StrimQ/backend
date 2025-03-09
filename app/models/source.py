@@ -14,6 +14,7 @@ class Source(DeclarativeBase):
     name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     tenant = relationship("Tenant", back_populates="sources")
     tags = relationship("SourceTag", back_populates="source")
@@ -31,6 +32,7 @@ class SourceTag(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     source = relationship("Source", back_populates="tags")
 
@@ -45,6 +47,7 @@ class SourceAppTable(DeclarativeBase):
     table_name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     __table_args__ = (
         UniqueConstraint(
@@ -73,6 +76,7 @@ class SourceAppConfig(DeclarativeBase):
     value = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     source = relationship("Source", back_populates="app_configs")
 
@@ -87,6 +91,7 @@ class SourceAppColumn(DeclarativeBase):
     data_type = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     table = relationship("SourceAppTable", back_populates="columns")
 
@@ -102,6 +107,7 @@ class SourceKCConnector(DeclarativeBase):
     version = Column(String(255))
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     source = relationship("Source", back_populates="kc_connectors")
     configs = relationship("SourceKCConfig", back_populates="kc_connector")
@@ -118,5 +124,6 @@ class SourceKCConfig(DeclarativeBase):
     value = Column(Text)
     created_at = Column(DateTime, default=aware_utcnow())
     updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
     kc_connector = relationship("SourceKCConnector", back_populates="configs")
