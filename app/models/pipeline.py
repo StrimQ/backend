@@ -1,84 +1,103 @@
 import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy import ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, relationship
-from utils.datetime_utils import aware_utcnow
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.destination import Destination
+    from app.models.source import Source, SourceAppTable
+    from app.models.tenant import Tenant, User
 
 
-class Pipeline(DeclarativeBase):
+class Pipeline(Base):
     __tablename__ = "pipelines"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    source_id = Column(UUID(as_uuid=True), ForeignKey("sources.id"), nullable=False)
-    destination_id = Column(
-        UUID(as_uuid=True), ForeignKey("destinations.id"), nullable=False
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    name = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
-
-    tenant = relationship("Tenant", back_populates="pipelines")
-    source = relationship("Source", back_populates="pipelines")
-    destination = relationship("Destination", back_populates="pipelines")
-    tags = relationship("PipelineTag", back_populates="pipeline")
-    app_configs = relationship("PipelineAppConfig", back_populates="pipeline")
-    source_app_tables = relationship(
-        "SourceAppTable",
-        secondary="pipeline_source_app_tables",
-        back_populates="pipelines",
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"))
+    source_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sources.id"))
+    destination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("destinations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
     )
 
+    tenant: Mapped["Tenant"] = relationship()
+    source: Mapped["Source"] = relationship()
+    destination: Mapped["Destination"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
+    tags: Mapped[list["PipelineTag"]] = relationship()
+    app_configs: Mapped[list["PipelineAppConfig"]] = relationship()
+    source_tables: Mapped[list["PipelineSourceAppTable"]] = relationship()
 
-# Pipeline Tag
-class PipelineTag(DeclarativeBase):
+
+class PipelineTag(Base):
     __tablename__ = "pipeline_tags"
 
-    pipeline_id = Column(
-        UUID(as_uuid=True), ForeignKey("pipelines.id"), primary_key=True
-    )  # Corrected from 'int' to UUID
-    key = Column(String(255), primary_key=True)
-    value = Column(String(255))
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    pipeline_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipelines.id"), primary_key=True
+    )
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    value: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    pipeline = relationship("Pipeline", back_populates="tags")
+    pipeline: Mapped["Pipeline"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
 
 
-# Pipeline App Config
-class PipelineAppConfig(DeclarativeBase):
+class PipelineAppConfig(Base):
     __tablename__ = "pipeline_app_configs"
 
-    pipeline_id = Column(
-        UUID(as_uuid=True), ForeignKey("pipelines.id"), primary_key=True
+    pipeline_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipelines.id"), primary_key=True
     )
-    key = Column(String(255), primary_key=True)
-    value = Column(String(255))
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    value: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    pipeline = relationship("Pipeline", back_populates="app_configs")
+    pipeline: Mapped["Pipeline"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
 
 
-# Pipeline-SourceAppTable Association
-class PipelineSourceAppTable(DeclarativeBase):
+class PipelineSourceAppTable(Base):
     __tablename__ = "pipeline_source_app_tables"
 
-    pipeline_id = Column(
-        UUID(as_uuid=True), ForeignKey("pipelines.id"), primary_key=True
+    pipeline_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipelines.id"), primary_key=True
     )
-    table_id = Column(
-        UUID(as_uuid=True), ForeignKey("source_app_tables.id"), primary_key=True
+    table_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("source_app_tables.id"), primary_key=True
     )
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    pipeline = relationship("Pipeline", back_populates="source_app_table_associations")
-    source_app_table = relationship(
-        "SourceAppTable", back_populates="pipeline_associations"
-    )
+    pipeline: Mapped["Pipeline"] = relationship()
+    table: Mapped["SourceAppTable"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])

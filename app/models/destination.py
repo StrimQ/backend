@@ -1,90 +1,120 @@
 import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, relationship
-from utils.datetime_utils import aware_utcnow
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.pipeline import Pipeline
+    from app.models.tenant import Tenant, User
 
 
-class Destination(DeclarativeBase):
+class Destination(Base):
     __tablename__ = "destinations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    name = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    tenant = relationship("Tenant", back_populates="destinations")
-    tags = relationship("DestinationTag", back_populates="destination")
-    app_configs = relationship("DestinationAppConfig", back_populates="destination")
-    kc_connectors = relationship("DestinationKCConnector", back_populates="destination")
-    pipelines = relationship("Pipeline", back_populates="destination")
+    tenant: Mapped["Tenant"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
+    tags: Mapped[list["DestinationTag"]] = relationship()
+    app_configs: Mapped[list["DestinationAppConfig"]] = relationship()
+    kc_connectors: Mapped[list["DestinationKcConnector"]] = relationship()
+    pipelines: Mapped[list["Pipeline"]] = relationship()
 
 
-# Destination Tag
-class DestinationTag(DeclarativeBase):
+class DestinationTag(Base):
     __tablename__ = "destination_tags"
 
-    destination_id = Column(
-        UUID(as_uuid=True), ForeignKey("destinations.id"), primary_key=True
+    destination_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("destinations.id"), primary_key=True
     )
-    key = Column(String(255), primary_key=True)
-    value = Column(String(255))
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    value: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    destination = relationship("Destination", back_populates="tags")
+    destination: Mapped["Destination"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
 
 
-# Destination App Config
-class DestinationAppConfig(DeclarativeBase):
+class DestinationAppConfig(Base):
     __tablename__ = "destination_app_configs"
 
-    destination_id = Column(
-        UUID(as_uuid=True), ForeignKey("destinations.id"), primary_key=True
+    destination_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("destinations.id"), primary_key=True
     )
-    key = Column(String(255), primary_key=True)
-    value = Column(String(255))
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    value: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    destination = relationship("Destination", back_populates="app_configs")
+    destination: Mapped["Destination"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
 
 
-# Destination Kafka Connect Connector
-class DestinationKCConnector(DeclarativeBase):
+class DestinationKcConnector(Base):
     __tablename__ = "destination_kc_connectors"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    destination_id = Column(
-        UUID(as_uuid=True), ForeignKey("destinations.id"), nullable=False
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    name = Column(String(255), nullable=False, unique=True)
-    connector_class = Column(String(255))
-    version = Column(String(255))
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    destination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("destinations.id"))
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    connector_class: Mapped[str] = mapped_column(String(255))
+    version: Mapped[str] = mapped_column(String(255))
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    destination = relationship("Destination", back_populates="kc_connectors")
-    configs = relationship("DestinationKCConfig", back_populates="kc_connector")
+    destination: Mapped["Destination"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])
+    configs: Mapped[list["DestinationKcConfig"]] = relationship()
 
 
-# Destination Kafka Connect Config
-class DestinationKCConfig(DeclarativeBase):
+class DestinationKcConfig(Base):
     __tablename__ = "destination_kc_configs"
 
-    kc_id = Column(
-        UUID(as_uuid=True), ForeignKey("destination_kc_connectors.id"), primary_key=True
+    kc_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("destination_kc_connectors.id"), primary_key=True
     )
-    key = Column(String(255), primary_key=True)
-    value = Column(Text)
-    created_at = Column(DateTime, default=aware_utcnow())
-    updated_at = Column(DateTime, default=aware_utcnow(), onupdate=aware_utcnow())
-    deleted_at = Column(DateTime, nullable=True, default=None)
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("now()"), server_onupdate=text("now()")
+    )
 
-    kc_connector = relationship("DestinationKCConnector", back_populates="configs")
+    connector: Mapped["DestinationKcConnector"] = relationship()
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    updated_by: Mapped["User"] = relationship(foreign_keys=[updated_by_user_id])

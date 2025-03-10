@@ -3,8 +3,8 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 
-from .logging import configure_logging
-from .settings import settings
+from app.logging import configure_logging
+from app.settings import settings
 
 app = FastAPI(
     title="Real-time data streaming with FastAPI and Temporal",

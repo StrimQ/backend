@@ -1,3 +1,4 @@
+import enum
 from typing import Annotated, Literal, Self, Union
 
 from pydantic import BaseModel, Field, model_validator
@@ -7,11 +8,14 @@ from app.schemas.common import EntityNameQuery
 ENTITY = "source"
 
 
-class SourceCreateBase(BaseModel):
-    name: str = EntityNameQuery(ENTITY)
+class SQLSourceBinaryHandlingMode(str, enum.Enum):
+    BYTES = "bytes"
+    BASE64 = "base64"
+    BASE64_URL_SAFE = "base64-url-safe"
+    HEX = "hex"
 
 
-class PostgreSQLSourceCreate(SourceCreateBase):
+class PostgreSQLSourceCreateConfig(BaseModel):
     connector: Literal["postgresql"] = "postgresql"
     host: str
     port: int = 5432
@@ -19,10 +23,27 @@ class PostgreSQLSourceCreate(SourceCreateBase):
     password: str
     database: str
     snapshot_table_schema: str = "public"
+    slot_name: str
+    publication_name: str
+    binary_handling_mode: SQLSourceBinaryHandlingMode = (
+        SQLSourceBinaryHandlingMode.BYTES
+    )
     heartbeat_enabled: bool = False
     heartbeat_interval: int | None = None
     heartbeat_schema: str | None = None
     heartbeat_table: str | None = None
+
+    # {
+    #     "schema1": {
+    #         "table1": ["column1", "column2"],
+    #         "table2": ["column1", "column2"],
+    #     },
+    #     "schema2": {
+    #         "table1": ["column1", "column2"],
+    #         "table2": ["column1", "column2"],
+    #     },
+    # }
+    table_hierarchy: dict[str, dict[str, list[str]]]
 
     @model_validator(mode="after")
     def validate_heartbeat_fields(self) -> Self:
@@ -42,7 +63,7 @@ class PostgreSQLSourceCreate(SourceCreateBase):
         return self
 
 
-class MySQLSourceCreate(SourceCreateBase):
+class MySQLSourceCreateConfig(BaseModel):
     connector: Literal["mysql"] = "mysql"
     host: str
     port: int = 3306
@@ -50,10 +71,25 @@ class MySQLSourceCreate(SourceCreateBase):
     username: str
     password: str
 
+    # {
+    #     "database1": {
+    #         "table1": ["column1", "column2"],
+    #         "table2": ["column1", "column2"],
+    #     },
+    #     "database2": {
+    #         "table1": ["column1", "column2"],
+    #         "table2": ["column1", "column2"],
+    #     },
+    # }
+    table_hierarchy: dict[str, dict[str, list[str]]]
 
-SourceCreate = Annotated[
-    Union[PostgreSQLSourceCreate, MySQLSourceCreate], Field(discriminator="connector")
-]
+
+class SourceCreate(BaseModel):
+    name: str = EntityNameQuery(ENTITY)
+    config: Annotated[
+        Union[PostgreSQLSourceCreateConfig, MySQLSourceCreateConfig],
+        Field(discriminator="connector"),
+    ]
 
 
 class SourceResponse(BaseModel):
