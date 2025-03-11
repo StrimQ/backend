@@ -1,18 +1,8 @@
-import enum
-from typing import Annotated, Literal, Self, Union
+from typing import Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
-from app.schemas.common import EntityNameQuery
-
-ENTITY = "source"
-
-
-class SQLSourceBinaryHandlingMode(str, enum.Enum):
-    BYTES = "bytes"
-    BASE64 = "base64"
-    BASE64_URL_SAFE = "base64-url-safe"
-    HEX = "hex"
+from app.schemas.source.types import SQLSourceBinaryHandlingMode
 
 
 class PostgreSQLSourceCreateConfig(BaseModel):
@@ -61,36 +51,3 @@ class PostgreSQLSourceCreateConfig(BaseModel):
                     "Heartbeat table is required when heartbeat is enabled"
                 )
         return self
-
-
-class MySQLSourceCreateConfig(BaseModel):
-    connector: Literal["mysql"] = "mysql"
-    host: str
-    port: int = 3306
-    database: str
-    username: str
-    password: str
-
-    # {
-    #     "database1": {
-    #         "table1": ["column1", "column2"],
-    #         "table2": ["column1", "column2"],
-    #     },
-    #     "database2": {
-    #         "table1": ["column1", "column2"],
-    #         "table2": ["column1", "column2"],
-    #     },
-    # }
-    table_hierarchy: dict[str, dict[str, list[str]]]
-
-
-class SourceCreate(BaseModel):
-    name: str = EntityNameQuery(ENTITY)
-    config: Annotated[
-        Union[PostgreSQLSourceCreateConfig, MySQLSourceCreateConfig],
-        Field(discriminator="connector"),
-    ]
-
-
-class SourceResponse(BaseModel):
-    pass
