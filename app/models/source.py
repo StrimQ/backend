@@ -16,15 +16,15 @@ class Source(Base):
     __tablename__ = "sources"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True), primary_key=True, server_default=text("GEN_RANDOM_UUID()")
     )
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"))
     name: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -45,9 +45,9 @@ class SourceTag(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -64,9 +64,9 @@ class SourceAppConfig(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -77,7 +77,7 @@ class SourceAppTable(Base):
     __tablename__ = "source_app_tables"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True), primary_key=True, server_default=text("GEN_RANDOM_UUID()")
     )
     source_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sources.id"))
     db_name: Mapped[str] = mapped_column(String(255))
@@ -85,9 +85,9 @@ class SourceAppTable(Base):
     table_name: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     __table_args__ = (
@@ -109,9 +109,9 @@ class SourceAppColumn(Base):
     data_type: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -122,7 +122,7 @@ class SourceKcConnector(Base):
     __tablename__ = "source_kc_connectors"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True), primary_key=True, server_default=text("GEN_RANDOM_UUID()")
     )
     source_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sources.id"))
     name: Mapped[str] = mapped_column(String(255), unique=True)
@@ -130,9 +130,9 @@ class SourceKcConnector(Base):
     version: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -150,9 +150,9 @@ class SourceKcConfig(Base):
     value: Mapped[str] = mapped_column(Text)
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("now()"), server_onupdate=text("now()")
+        server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
