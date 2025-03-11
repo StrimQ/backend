@@ -45,7 +45,7 @@ class Tenant(Base):
         server_default=text("NOW()"), server_onupdate=text("NOW()")
     )
 
-    infra: Mapped["TenantInfra"] = relationship(lazy="joined", back_populates="tenants")
+    infra: Mapped["TenantInfra"] = relationship(back_populates="tenants")
     users: Mapped[list["User"]] = relationship(secondary=users_tenants)
 
 
