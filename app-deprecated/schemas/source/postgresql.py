@@ -2,6 +2,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, model_validator
 
+from app.models.source import SourceAppConfig
 from app.schemas.source.types import SQLSourceBinaryHandlingMode
 
 
@@ -51,3 +52,22 @@ class PostgreSQLSourceCreateConfig(BaseModel):
                     "Heartbeat table is required when heartbeat is enabled"
                 )
         return self
+
+
+    def to_app_configs_model(self) -> list[SourceAppConfig]:
+        app_configs = [
+        ]
+
+        for k, v in [
+            ("connector", self.connector),
+            ("host", self.host),
+            ("port", str(self.port)),
+            ("username", self.username),
+            ("password", self.password),
+            ("database", self.database),
+            ("heartbeat_enabled", str(self.heartbeat_enabled)),
+            ("heartbeat_interval", str(self.heartbeat_interval)),
+            ("heartbeat_schema", self.heartbeat_schema),
+            ("heartbeat_table", self.heartbeat_table),
+        ]:
+            app_configs.append(SourceAppConfig(key=k, value=v))

@@ -8,7 +8,11 @@ from app.schemas.source.postgresql import PostgreSQLSourceCreateConfig
 
 class SourceMapper:
     @staticmethod
-    def create_to_model(source_create: SourceCreate, tenant_id: UUID) -> Source:
+    def create_schema_to_model(
+        source_create: SourceCreate,
+        user_id: UUID,
+        tenant_id: UUID,
+    ) -> Source:
         """
         Map a SourceCreate Pydantic model to a Source SQLAlchemy model with
             related entities.
@@ -21,7 +25,7 @@ class SourceMapper:
             A fully constructed Source SQLAlchemy model instance.
         """
         # Create the base Source instance
-        source = Source(name=source_create.name, tenant_id=tenant_id)
+        source = Source(name=source_create.name, tenant_id=tenant_id, created_by_user_id=user_id)
         config = source_create.config
         source.app_configs = []
         source.app_tables = []
@@ -100,7 +104,7 @@ class SourceMapper:
         return source
 
     @staticmethod
-    def create_config_to_model(
+    def create_config_schema_to_model(
         source_create_config: SourceCreateConfig,
     ) -> list[SourceAppConfig]:
         pass

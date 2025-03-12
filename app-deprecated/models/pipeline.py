@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Table, text
+from sqlalchemy import Column, DateTime, ForeignKey, String, Table, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,14 +19,14 @@ pipelines_source_app_tables = Table(
     Base.metadata,
     Column("pipeline_id", ForeignKey("pipelines.id"), primary_key=True),
     Column("table_id", ForeignKey("source_app_tables.id"), primary_key=True),
-    Column("created_at", DateTime, server_default=text("NOW()")),
+    Column("created_at", DateTime, server_default=func.now()),
     Column("created_by_user_id", UUID(as_uuid=True), ForeignKey("users.id")),
     Column("updated_by_user_id", UUID(as_uuid=True), ForeignKey("users.id")),
     Column(
         "updated_at",
         DateTime,
-        server_default=text("NOW()"),
-        server_onupdate=text("NOW()"),
+        server_default=func.now(),
+        server_onupdate=func.now(),
     ),
 )
 
@@ -43,9 +43,9 @@ class Pipeline(Base):
     name: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     source: Mapped["Source"] = relationship()
@@ -69,9 +69,9 @@ class PipelineTag(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -88,9 +88,9 @@ class PipelineAppConfig(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])

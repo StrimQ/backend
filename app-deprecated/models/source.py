@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, text
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,9 +22,9 @@ class Source(Base):
     name: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -45,9 +45,9 @@ class SourceTag(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -64,9 +64,9 @@ class SourceAppConfig(Base):
     value: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -85,9 +85,9 @@ class SourceAppTable(Base):
     table_name: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     __table_args__ = (
@@ -109,9 +109,9 @@ class SourceAppColumn(Base):
     data_type: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -130,9 +130,9 @@ class SourceKcConnector(Base):
     version: Mapped[str] = mapped_column(String(255))
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
@@ -150,9 +150,9 @@ class SourceKcConfig(Base):
     value: Mapped[str] = mapped_column(Text)
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     updated_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])

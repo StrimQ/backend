@@ -1,7 +1,9 @@
 # Install pre-commit
 .PHONY: pre-commit-install
 pre-commit-install:
-	poetry sync
+	pip3 install pre-commit
+	brew install golangci-lint
+	go install golang.org/x/tools/cmd/goimports@latest
 	pre-commit install
 
 .PHONY: up

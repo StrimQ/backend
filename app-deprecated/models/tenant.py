@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import Column, Date, Enum, ForeignKey, String, Table, text
+from sqlalchemy import Column, Date, Enum, ForeignKey, String, Table, func
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,12 +22,12 @@ users_tenants = Table(
     Base.metadata,
     Column("user_id", ForeignKey("users.id"), primary_key=True),
     Column("tenant_id", ForeignKey("tenants.id"), primary_key=True),
-    Column("created_at", Date, server_default=text("NOW()")),
+    Column("created_at", Date, server_default=func.now()),
     Column(
         "updated_at",
         Date,
-        server_default=text("NOW()"),
-        server_onupdate=text("NOW()"),
+        server_default=func.now(),
+        server_onupdate=func.now(),
     ),
 )
 
@@ -40,9 +40,9 @@ class Tenant(Base):
     domain: Mapped[str] = mapped_column(String(255))
     tier: Mapped[Tier] = mapped_column(Enum(Tier))
     infra_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenant_infras.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     infra: Mapped["TenantInfra"] = relationship(back_populates="tenants")
@@ -53,9 +53,9 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
 
@@ -68,9 +68,9 @@ class TenantInfra(Base):
     schema_registry_url: Mapped[str] = mapped_column(String(255))
     kafka_connect_url: Mapped[str] = mapped_column(String(255))
     kms_key: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("NOW()"), server_onupdate=text("NOW()")
+        server_default=func.now(), server_onupdate=func.now()
     )
 
     tenants: Mapped[list["Tenant"]] = relationship(back_populates="infra")
