@@ -1,16 +1,14 @@
-package app
+package main
 
 import (
 	"net/http"
 	"os"
 
-	"github.com/StrimQ/backend/internal/config"
 	"github.com/StrimQ/backend/internal/controllers"
 	"github.com/StrimQ/backend/internal/db"
 	"github.com/StrimQ/backend/internal/logging"
-	"github.com/StrimQ/backend/internal/services"
-
 	"github.com/StrimQ/backend/internal/repositories"
+	"github.com/StrimQ/backend/internal/services"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -28,7 +26,7 @@ type App struct {
 
 // NewApp initializes the application
 func NewApp() *App {
-	cfg, err := config.LoadConfig()
+	cfg, err := LoadConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config: %v")
 	}

@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"github.com/caarlos0/env/v11"
