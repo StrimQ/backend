@@ -15,5 +15,7 @@ repos:
     rev: v1.0.0-rc.1
     hooks:
       - id: go-imports-repo
+        args: [-w]
       - id: go-fmt-repo
-      # - id: golangci-lint-repo-pkg
+        args: [-w]
+      - id: golangci-lint-repo-mod
