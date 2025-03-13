@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/StrimQ/backend/internal/services"
 	"github.com/go-playground/validator/v10"
 )
@@ -14,10 +16,17 @@ func NewSourceController(sourceService *services.SourceService, validate *valida
 	return &SourceController{sourceService, validate}
 }
 
-func (c *SourceController) CreateSource() {
-	// TODO
+func (c *SourceController) List(w http.ResponseWriter, r *http.Request) {
 }
 
-func (c *SourceController) GetSources() {
-	// TODO
+func (c *SourceController) Create(w http.ResponseWriter, r *http.Request) {
+}
+
+func (c *SourceController) Get(w http.ResponseWriter, r *http.Request) {
+}
+
+func (c *SourceController) Update(w http.ResponseWriter, r *http.Request) {
+}
+
+func (c *SourceController) Delete(w http.ResponseWriter, r *http.Request) {
 }

@@ -19,8 +19,6 @@ import (
 type App struct {
 	router *chi.Mux
 
-	sourceService *services.SourceService
-
 	validate *validator.Validate
 }
 
@@ -46,18 +44,21 @@ func NewApp() *App {
 	sourceService := services.NewSourceService(sourceRepo)
 	sourceController := controllers.NewSourceController(sourceService, validate)
 
-	// Setup router
 	router := chi.NewRouter()
-	sourceController.CreateSource()
-	// router.Use(middlewares.Logger(logger))
-	// router.Post("/sources", sourceController.CreateSource)
-	// router.Get("/sources", sourceController.GetSources)
+	addRoutes(router, sourceController)
 
 	return &App{
-		router:        router,
-		sourceService: sourceService,
-		validate:      validate,
+		router:   router,
+		validate: validate,
 	}
+}
+
+func addRoutes(router *chi.Mux, sourceController *controllers.SourceController) {
+	router.Get("/sources", sourceController.List)
+	router.Post("/sources", sourceController.Create)
+	router.Get("/sources/{id}", sourceController.Get)
+	router.Put("/sources/{id}", sourceController.Update)
+	router.Delete("/sources/{id}", sourceController.Delete)
 }
 
 // Run starts the HTTP server
