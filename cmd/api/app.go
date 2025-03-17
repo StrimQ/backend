@@ -26,7 +26,7 @@ type App struct {
 func NewApp() *App {
 	cfg, err := LoadConfig()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config: %v")
+		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
 	logging.ConfigureLogging(cfg.Debug)
@@ -37,7 +37,7 @@ func NewApp() *App {
 	}
 
 	// Initialize validator
-	validate := validator.New()
+	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	// Dependency injection
 	sourceRepo := repositories.NewSourceRepository(pgDB)
@@ -67,7 +67,7 @@ func (a *App) Run() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Server starting on :%s", port)
+	log.Info().Msgf("Server starting on :%s", port)
 	if err := http.ListenAndServe(":"+port, a.router); err != nil {
 		log.Fatal().Err(err).Msg("Server failed to start")
 	}

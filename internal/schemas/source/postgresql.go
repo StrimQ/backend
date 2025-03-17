@@ -1,11 +1,5 @@
 package schemas
 
-import (
-	"errors"
-
-	"github.com/go-playground/validator/v10"
-)
-
 // PostgreSQLSourceCreateConfig represents the configuration for a PostgreSQL source.
 type PostgreSQLSourceCreateConfig struct {
 	Host                string                         `json:"host" validate:"required,hostname"`
@@ -24,14 +18,8 @@ type PostgreSQLSourceCreateConfig struct {
 	TableHierarchy      map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
 }
 
-// Validate validates the PostgreSQLSourceCreateConfig struct, applying defaults and custom logic.
-func (c *PostgreSQLSourceCreateConfig) Validate() error {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	if err := validate.Struct(c); err != nil {
-		return err
-	}
-
-	// Apply default values
+// SetDefault applies default values to the configuration.
+func (c *PostgreSQLSourceCreateConfig) SetDefault() error {
 	if c.Port == nil {
 		defaultPort := 5432
 		c.Port = &defaultPort
@@ -44,17 +32,5 @@ func (c *PostgreSQLSourceCreateConfig) Validate() error {
 		c.BinaryHandlingMode = string(Bytes)
 	}
 
-	// Validate heartbeat fields
-	if c.HeartbeatEnabled {
-		if c.HeartbeatInterval == nil {
-			return errors.New("heartbeat_interval is required when heartbeat_enabled is true")
-		}
-		if c.HeartbeatSchema == nil {
-			return errors.New("heartbeat_schema is required when heartbeat_enabled is true")
-		}
-		if c.HeartbeatTable == nil {
-			return errors.New("heartbeat_table is required when heartbeat_enabled is true")
-		}
-	}
 	return nil
 }

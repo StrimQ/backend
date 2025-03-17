@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-playground/validator/v10 v10.25.0
+	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.33.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
