@@ -15,6 +15,6 @@ import (
 
 type Users struct {
 	UserID    uuid.UUID `sql:"primary_key"`
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

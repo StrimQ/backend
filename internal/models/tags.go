@@ -16,10 +16,10 @@ import (
 type Tags struct {
 	TenantID        uuid.UUID `sql:"primary_key"`
 	TagID           uuid.UUID `sql:"primary_key"`
-	Key             *string
-	Value           *string
-	CreatedByUserID *uuid.UUID
-	UpdatedByUserID *uuid.UUID
-	CreatedAt       *time.Time
-	UpdatedAt       *time.Time
+	Key             string
+	Value           string
+	CreatedByUserID uuid.UUID
+	UpdatedByUserID uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

@@ -16,12 +16,12 @@ import (
 type Pipelines struct {
 	TenantID        uuid.UUID `sql:"primary_key"`
 	PipelineID      uuid.UUID `sql:"primary_key"`
-	Name            *string
+	Name            string
 	SourceID        *uuid.UUID
-	DestinationID   *uuid.UUID
-	Config          *string
-	CreatedByUserID *uuid.UUID
-	UpdatedByUserID *uuid.UUID
-	CreatedAt       *time.Time
-	UpdatedAt       *time.Time
+	DestinationID   uuid.UUID
+	Config          string
+	CreatedByUserID uuid.UUID
+	UpdatedByUserID uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

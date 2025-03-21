@@ -18,6 +18,6 @@ type PipelineTransformerInputs struct {
 	PipelineID    uuid.UUID `sql:"primary_key"`
 	TransformerID uuid.UUID `sql:"primary_key"`
 	TopicID       uuid.UUID `sql:"primary_key"`
-	CreatedAt     *time.Time
-	UpdatedAt     *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }

@@ -17,10 +17,10 @@ type SourceOutputs struct {
 	TenantID       uuid.UUID `sql:"primary_key"`
 	SourceID       uuid.UUID `sql:"primary_key"`
 	TopicID        uuid.UUID `sql:"primary_key"`
-	DatabaseName   *string
-	GroupName      *string
-	CollectionName *string
-	Config         *string
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
+	DatabaseName   string
+	GroupName      string
+	CollectionName string
+	Config         string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }

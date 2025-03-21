@@ -15,11 +15,11 @@ import (
 
 type TenantInfras struct {
 	TenantInfraID     uuid.UUID `sql:"primary_key"`
-	Name              *string
-	KafkaBrokers      *string
-	SchemaRegistryURL *string
-	KafkaConnectURL   *string
-	KmsKey            *string
-	CreatedAt         *time.Time
-	UpdatedAt         *time.Time
+	Name              string
+	KafkaBrokers      string
+	SchemaRegistryURL string
+	KafkaConnectURL   string
+	KmsKey            string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }

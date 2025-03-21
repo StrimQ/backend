@@ -16,9 +16,9 @@ import (
 type Topics struct {
 	TenantID     uuid.UUID `sql:"primary_key"`
 	TopicID      uuid.UUID `sql:"primary_key"`
-	Name         *string
-	ProducerType *TopicProducerType
-	ProducerID   *uuid.UUID
-	CreatedAt    *time.Time
-	UpdatedAt    *time.Time
+	Name         string
+	ProducerType TopicProducerType
+	ProducerID   uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

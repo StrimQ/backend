@@ -15,10 +15,10 @@ import (
 
 type Tenants struct {
 	TenantID  uuid.UUID `sql:"primary_key"`
-	Name      *string
-	Domain    *string
-	Tier      *Tier
-	InfraID   *uuid.UUID
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	Name      string
+	Domain    string
+	Tier      Tier
+	InfraID   uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

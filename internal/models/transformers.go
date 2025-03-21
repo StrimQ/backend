@@ -16,10 +16,10 @@ import (
 type Transformers struct {
 	TenantID        uuid.UUID `sql:"primary_key"`
 	TransfomerID    uuid.UUID `sql:"primary_key"`
-	Name            *string
-	Config          *string
-	CreatedByUserID *uuid.UUID
-	UpdatedByUserID *uuid.UUID
-	CreatedAt       *time.Time
-	UpdatedAt       *time.Time
+	Name            string
+	Config          string
+	CreatedByUserID uuid.UUID
+	UpdatedByUserID uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

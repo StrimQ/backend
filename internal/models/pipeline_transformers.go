@@ -17,8 +17,8 @@ type PipelineTransformers struct {
 	TenantID      uuid.UUID `sql:"primary_key"`
 	PipelineID    uuid.UUID `sql:"primary_key"`
 	TransformerID uuid.UUID `sql:"primary_key"`
-	Stage         *int32
-	Config        *string
-	CreatedAt     *time.Time
-	UpdatedAt     *time.Time
+	Stage         int32
+	Config        string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }

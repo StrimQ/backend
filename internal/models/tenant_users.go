@@ -16,6 +16,6 @@ import (
 type TenantUsers struct {
 	TenantID  uuid.UUID `sql:"primary_key"`
 	UserID    uuid.UUID `sql:"primary_key"`
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

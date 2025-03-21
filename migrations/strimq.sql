@@ -23,75 +23,75 @@ CREATE TYPE "destination_engine" AS ENUM (
 
 CREATE TABLE "tenants" (
   "tenant_id" UUID,
-  "name" varchar(255),
-  "domain" varchar(255),
-  "tier" tier,
-  "infra_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "domain" varchar(255) NOT NULL,
+  "tier" tier NOT NULL,
+  "infra_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id")
 );
 
 CREATE TABLE "users" (
   "user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("user_id")
 );
 
 CREATE TABLE "tenant_users" (
   "tenant_id" UUID,
   "user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "user_id")
 );
 
 CREATE TABLE "tenant_infras" (
   "tenant_infra_id" UUID,
-  "name" varchar(255),
-  "kafka_brokers" varchar(255)[],
-  "schema_registry_url" varchar(255),
-  "kafka_connect_url" varchar(255),
-  "kms_key" varchar(255),
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "kafka_brokers" varchar(255)[] NOT NULL,
+  "schema_registry_url" varchar(255) NOT NULL,
+  "kafka_connect_url" varchar(255) NOT NULL,
+  "kms_key" varchar(255) NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_infra_id")
 );
 
 CREATE TABLE "tags" (
   "tenant_id" UUID,
   "tag_id" UUID,
-  "key" varchar(255),
-  "value" varchar(255),
-  "created_by_user_id" UUID,
-  "updated_by_user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "key" varchar(255) NOT NULL,
+  "value" varchar(255) NOT NULL,
+  "created_by_user_id" UUID NOT NULL,
+  "updated_by_user_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "tag_id")
 );
 
 CREATE TABLE "topics" (
   "tenant_id" UUID,
   "topic_id" UUID,
-  "name" varchar(255),
-  "producer_type" topic_producer_type,
-  "producer_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "producer_type" topic_producer_type NOT NULL,
+  "producer_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "topic_id")
 );
 
 CREATE TABLE "sources" (
   "tenant_id" UUID,
   "source_id" UUID,
-  "name" varchar(255),
-  "engine" source_engine,
-  "config" JSONB,
-  "created_by_user_id" UUID,
-  "updated_by_user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "engine" source_engine NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_by_user_id" UUID NOT NULL,
+  "updated_by_user_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "source_id")
 );
 
@@ -99,24 +99,24 @@ CREATE TABLE "source_outputs" (
   "tenant_id" UUID,
   "source_id" UUID,
   "topic_id" UUID,
-  "database_name" VARCHAR(255),
-  "group_name" VARCHAR(255),
-  "collection_name" VARCHAR(255),
-  "config" JSONB,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "database_name" VARCHAR(255) NOT NULL,
+  "group_name" VARCHAR(255) NOT NULL,
+  "collection_name" VARCHAR(255) NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "source_id", "topic_id")
 );
 
 CREATE TABLE "transformers" (
   "tenant_id" UUID,
   "transfomer_id" UUID,
-  "name" varchar(255),
-  "config" JSONB,
-  "created_by_user_id" UUID,
-  "updated_by_user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_by_user_id" UUID NOT NULL,
+  "updated_by_user_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "transfomer_id")
 );
 
@@ -124,9 +124,9 @@ CREATE TABLE "transformer_inputs" (
   "tenant_id" UUID,
   "transformer_id" UUID,
   "topic_id" UUID,
-  "config" JSONB,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "config" JSONB NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "transformer_id", "topic_id")
 );
 
@@ -134,36 +134,36 @@ CREATE TABLE "transformer_outputs" (
   "tenant_id" UUID,
   "transformer_id" UUID,
   "topic_id" UUID,
-  "config" JSONB,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "config" JSONB NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "transformer_id", "topic_id")
 );
 
 CREATE TABLE "destinations" (
   "tenant_id" UUID,
   "destination_id" UUID,
-  "name" varchar(255),
-  "engine" destination_engine,
-  "config" JSONB,
-  "created_by_user_id" UUID,
-  "updated_by_user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "name" varchar(255) NOT NULL,
+  "engine" destination_engine NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_by_user_id" UUID NOT NULL,
+  "updated_by_user_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "destination_id")
 );
 
 CREATE TABLE "pipelines" (
   "tenant_id" UUID,
   "pipeline_id" UUID,
-  "name" varchar(255),
+  "name" varchar(255) NOT NULL,
   "source_id" UUID,
-  "destination_id" UUID,
-  "config" JSONB,
-  "created_by_user_id" UUID,
-  "updated_by_user_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "destination_id" UUID NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_by_user_id" UUID NOT NULL,
+  "updated_by_user_id" UUID NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "pipeline_id")
 );
 
@@ -171,10 +171,10 @@ CREATE TABLE "pipeline_transformers" (
   "tenant_id" UUID,
   "pipeline_id" UUID,
   "transformer_id" UUID,
-  "stage" int,
-  "config" JSONB,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "stage" int NOT NULL,
+  "config" JSONB NOT NULL,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "pipeline_id", "transformer_id")
 );
 
@@ -183,8 +183,8 @@ CREATE TABLE "pipeline_transformer_inputs" (
   "pipeline_id" UUID,
   "transformer_id" UUID,
   "topic_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "pipeline_id", "transformer_id", "topic_id")
 );
 
@@ -192,8 +192,8 @@ CREATE TABLE "pipeline_destination_inputs" (
   "tenant_id" UUID,
   "pipeline_id" UUID,
   "topic_id" UUID,
-  "created_at" timestamp,
-  "updated_at" timestamp,
+  "created_at" timestamp NOT NULL,
+  "updated_at" timestamp NOT NULL,
   PRIMARY KEY ("tenant_id", "pipeline_id", "topic_id")
 );
 

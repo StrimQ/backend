@@ -16,11 +16,11 @@ import (
 type Destinations struct {
 	TenantID        uuid.UUID `sql:"primary_key"`
 	DestinationID   uuid.UUID `sql:"primary_key"`
-	Name            *string
-	Engine          *DestinationEngine
-	Config          *string
-	CreatedByUserID *uuid.UUID
-	UpdatedByUserID *uuid.UUID
-	CreatedAt       *time.Time
-	UpdatedAt       *time.Time
+	Name            string
+	Engine          DestinationEngine
+	Config          string
+	CreatedByUserID uuid.UUID
+	UpdatedByUserID uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
