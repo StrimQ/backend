@@ -79,7 +79,7 @@ services:
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgresql
-      POSTGRES_PASSWORD: strimqadmin@1234
+      POSTGRES_PASSWORD: strimqadmin_1234
     ports:
       - '5432:5432'
     volumes:
