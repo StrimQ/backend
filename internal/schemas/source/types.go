@@ -1,4 +1,4 @@
-package schemas
+package source
 
 // SQLSourceBinaryHandlingMode represents the binary handling mode enum.
 type SQLSourceBinaryHandlingMode string

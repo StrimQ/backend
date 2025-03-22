@@ -1,4 +1,4 @@
-package schemas
+package source
 
 // MySQLSourceCreateConfig represents the configuration for a MySQL source.
 type MySQLSourceCreateConfig struct {

@@ -1,4 +1,4 @@
-package schemas
+package source
 
 // PostgreSQLSourceCreateConfig represents the configuration for a PostgreSQL source.
 type PostgreSQLSourceCreateConfig struct {
