@@ -31,7 +31,7 @@ func NewApp() *App {
 
 	logging.ConfigureLogging(cfg.Debug)
 
-	pgDB, err := db.NewPostgresDB(cfg.PGHost)
+	pgDB, err := db.NewPostgresDB(cfg.PGHost, cfg.PGPort, cfg.PGUsername, cfg.PGPassword, cfg.PGDBName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to PostgreSQL")
 	}

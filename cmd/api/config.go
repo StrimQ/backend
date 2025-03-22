@@ -7,7 +7,7 @@ import (
 // Config holds the application configuration
 type Config struct {
 	PGHost     string `env:"PG_HOST,required"`
-	PGPort     string `env:"PG_PORT" envDefault:"5432"`
+	PGPort     int    `env:"PG_PORT" envDefault:"5432"`
 	PGUsername string `env:"PG_USERNAME,required"`
 	PGPassword string `env:"PG_PASSWORD,required"`
 	PGDBName   string `env:"PG_DBNAME,required"`

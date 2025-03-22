@@ -1,11 +1,11 @@
 package repositories
 
-import "gorm.io/gorm"
+import "database/sql"
 
 type SourceRepository struct {
-	db *gorm.DB
+	db *sql.DB
 }
 
-func NewSourceRepository(db *gorm.DB) *SourceRepository {
+func NewSourceRepository(db *sql.DB) *SourceRepository {
 	return &SourceRepository{db}
 }
