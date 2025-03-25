@@ -1,4 +1,4 @@
-package models
+package entity
 
 import (
 	"time"
@@ -6,8 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type User struct {
-	UserID    uuid.UUID `gorm:"primaryKey;type:uuid"`
+type TenantUserEntity struct {
+	TenantID  uuid.UUID
+	UserID    uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/StrimQ/backend/internal/controllers"
+	"github.com/StrimQ/backend/internal/controller"
 	"github.com/StrimQ/backend/internal/db"
 	"github.com/StrimQ/backend/internal/logging"
-	"github.com/StrimQ/backend/internal/repositories"
-	"github.com/StrimQ/backend/internal/services"
+	"github.com/StrimQ/backend/internal/repository"
+	"github.com/StrimQ/backend/internal/service"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -31,7 +31,7 @@ func NewApp() *App {
 
 	logging.ConfigureLogging(cfg.Debug)
 
-	pgDB, err := db.NewPostgresDB(cfg.PGHost)
+	pgDB, err := db.NewPostgresDB(cfg.PGHost, cfg.PGPort, cfg.PGUsername, cfg.PGPassword, cfg.PGDBName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to PostgreSQL")
 	}
@@ -40,9 +40,9 @@ func NewApp() *App {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	// Dependency injection
-	sourceRepo := repositories.NewSourceRepository(pgDB)
-	sourceService := services.NewSourceService(sourceRepo)
-	sourceController := controllers.NewSourceController(sourceService, validate)
+	sourceRepo := repository.NewSourceRepository(pgDB)
+	sourceService := service.NewSourceService(sourceRepo)
+	sourceController := controller.NewSourceController(sourceService, validate)
 
 	router := chi.NewRouter()
 	addRoutes(router, sourceController)
@@ -53,7 +53,7 @@ func NewApp() *App {
 	}
 }
 
-func addRoutes(router *chi.Mux, sourceController *controllers.SourceController) {
+func addRoutes(router *chi.Mux, sourceController *controller.SourceController) {
 	router.Get("/sources", sourceController.List)
 	router.Post("/sources", sourceController.Create)
 	router.Get("/sources/{id}", sourceController.Get)
