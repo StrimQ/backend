@@ -6,8 +6,8 @@ import (
 )
 
 type MySQLSource struct {
-	Metadata *SourceMetadata    `validate:"required,dive"`
-	Config   *MySQLSourceConfig `validate:"required,dive"`
+	Metadata *SourceMetadata    `validate:"required"`
+	Config   *MySQLSourceConfig `validate:"required"`
 }
 
 // NewMySQLSource creates a new MySQLSource instance.
@@ -21,6 +21,12 @@ func NewMySQLSource(metadata *SourceMetadata, config *MySQLSourceConfig) *MySQLS
 // Validate validates the MySQL source and sets default values.
 func (s *MySQLSource) Validate(validate *validator.Validate) error {
 	if err := validate.Struct(s); err != nil {
+		return err
+	}
+	if err := s.Metadata.Validate(validate); err != nil {
+		return err
+	}
+	if err := s.Config.Validate(validate); err != nil {
 		return err
 	}
 
@@ -65,4 +71,9 @@ type MySQLSourceConfig struct {
 	HeartbeatSchema    *string                        `json:"heartbeat_schema" validate:"required_with=HeartbeatEnabled"`
 	HeartbeatTable     *string                        `json:"heartbeat_table" validate:"required_with=HeartbeatEnabled"`
 	TableHierarchy     map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
+}
+
+// Validate validates the MySQL source configuration.
+func (c *MySQLSourceConfig) Validate(validate *validator.Validate) error {
+	return validate.Struct(c)
 }

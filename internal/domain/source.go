@@ -12,14 +12,17 @@ type Source interface {
 	GenerateOutputs() []SourceOutput
 }
 
-type SourceConfig interface {
-}
+type SourceConfig interface{}
 
 type SourceMetadata struct {
 	TenantID uuid.UUID
 	SourceID uuid.UUID
 	Name     string            `validate:"required"`
 	Engine   enum.SourceEngine `validate:"required,oneof=mysql postgresql"`
+}
+
+func (m *SourceMetadata) Validate(validate *validator.Validate) error {
+	return validate.Struct(m)
 }
 
 type SourceOutput struct {

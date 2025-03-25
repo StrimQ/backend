@@ -7,8 +7,8 @@ import (
 
 // PostgreSQLSource represents a PostgreSQL data source.
 type PostgreSQLSource struct {
-	Metadata *SourceMetadata         `validate:"required,dive"`
-	Config   *PostgreSQLSourceConfig `validate:"required,dive"`
+	Metadata *SourceMetadata         `validate:"required"`
+	Config   *PostgreSQLSourceConfig `validate:"required"`
 }
 
 // NewPostgreSQLSource creates a new PostgreSQLSource instance.
@@ -24,6 +24,13 @@ func (s *PostgreSQLSource) Validate(validate *validator.Validate) error {
 	if err := validate.Struct(s); err != nil {
 		return err
 	}
+	if err := s.Metadata.Validate(validate); err != nil {
+		return err
+	}
+	if err := s.Config.Validate(validate); err != nil {
+		return err
+	}
+
 	if s.Config.Port == nil {
 		defaultPort := 5432
 		s.Config.Port = &defaultPort
@@ -70,4 +77,9 @@ type PostgreSQLSourceConfig struct {
 	HeartbeatSchema     *string                        `json:"heartbeat_schema"`
 	HeartbeatTable      *string                        `json:"heartbeat_table"`
 	TableHierarchy      map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
+}
+
+// Validate validates the PostgreSQL source configuration.
+func (c *PostgreSQLSourceConfig) Validate(validate *validator.Validate) error {
+	return validate.Struct(c)
 }

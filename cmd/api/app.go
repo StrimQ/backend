@@ -7,10 +7,12 @@ import (
 	"github.com/StrimQ/backend/internal/controller"
 	"github.com/StrimQ/backend/internal/db"
 	"github.com/StrimQ/backend/internal/logging"
+	"github.com/StrimQ/backend/internal/middleware"
 	"github.com/StrimQ/backend/internal/repository"
 	"github.com/StrimQ/backend/internal/service"
 
 	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog/log"
 )
@@ -41,16 +43,22 @@ func NewApp() *App {
 
 	// Dependency injection
 	sourceRepo := repository.NewSourceRepository(pgDB)
-	sourceService := service.NewSourceService(sourceRepo)
-	sourceController := controller.NewSourceController(sourceService, validate)
+	sourceService := service.NewSourceService(validate, sourceRepo)
+	sourceController := controller.NewSourceController(validate, sourceService)
 
 	router := chi.NewRouter()
+	addMiddlewares(router)
 	addRoutes(router, sourceController)
 
 	return &App{
 		router:   router,
 		validate: validate,
 	}
+}
+
+func addMiddlewares(router *chi.Mux) {
+	router.Use(chimw.Recoverer)
+	router.Use(middleware.Authenticator)
 }
 
 func addRoutes(router *chi.Mux, sourceController *controller.SourceController) {

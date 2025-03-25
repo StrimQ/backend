@@ -13,3 +13,7 @@ up:
 .PHONY: down
 down:
 	docker compose down
+
+.PHONY: run-local
+run-local:
+	export $(shell cat ./.env | xargs) && go run ./cmd/api/...
