@@ -12,7 +12,7 @@ type SourceEntity struct {
 	SourceID        uuid.UUID
 	Name            string
 	Engine          enum.SourceEngine
-	Config          string
+	Config          []byte
 	CreatedByUserID uuid.UUID
 	UpdatedByUserID uuid.UUID
 	CreatedAt       time.Time

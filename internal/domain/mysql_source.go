@@ -42,12 +42,22 @@ func (s *MySQLSource) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-// GenerateOutputs generates outputs based on the MySQL configuration.
-func (s *MySQLSource) GenerateOutputs() []SourceOutput {
+func (s *MySQLSource) GetMetadata() *SourceMetadata {
+	return s.Metadata
+}
+
+func (s *MySQLSource) GetConfig() SourceConfig {
+	return s.Config
+}
+
+// DeriveOutputs generates outputs based on the MySQL configuration.
+func (s *MySQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	var outputs []SourceOutput
 	for group, collections := range s.Config.TableHierarchy {
 		for collection, columns := range collections {
 			outputs = append(outputs, SourceOutput{
+				TenantID:       s.Metadata.TenantID,
+				SourceID:       s.Metadata.SourceID,
 				DatabaseName:   s.Config.Database,
 				GroupName:      group,
 				CollectionName: collection,
@@ -55,7 +65,7 @@ func (s *MySQLSource) GenerateOutputs() []SourceOutput {
 			})
 		}
 	}
-	return outputs
+	return outputs, nil
 }
 
 // MySQLSourceConfig holds MySQL-specific configuration.

@@ -44,7 +44,7 @@ func (s *SourceService) Create(ctx context.Context, sourceDTO *dto.SourceDTO) er
 		return err
 	}
 
-	if err := s.sourceRepo.Create(ctx, &source); err != nil {
+	if err := s.sourceRepo.Create(ctx, source); err != nil {
 		return err
 	}
 

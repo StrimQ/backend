@@ -13,7 +13,7 @@ type SourceOutputEntity struct {
 	DatabaseName   string
 	GroupName      string
 	CollectionName string
-	Config         string
+	Config         []byte
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }

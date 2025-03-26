@@ -12,7 +12,7 @@ type PipelineEntity struct {
 	Name            string
 	SourceID        *uuid.UUID
 	DestinationID   uuid.UUID
-	Config          string
+	Config          []byte
 	CreatedByUserID uuid.UUID
 	UpdatedByUserID uuid.UUID
 	CreatedAt       time.Time

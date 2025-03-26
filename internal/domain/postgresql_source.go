@@ -45,12 +45,22 @@ func (s *PostgreSQLSource) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-// GenerateOutputs generates outputs based on the PostgreSQL configuration.
-func (s *PostgreSQLSource) GenerateOutputs() []SourceOutput {
+func (s *PostgreSQLSource) GetMetadata() *SourceMetadata {
+	return s.Metadata
+}
+
+func (s *PostgreSQLSource) GetConfig() SourceConfig {
+	return s.Config
+}
+
+// DeriveOutputs generates outputs based on the PostgreSQL configuration.
+func (s *PostgreSQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	var outputs []SourceOutput
 	for group, collections := range s.Config.TableHierarchy {
 		for collection, columns := range collections {
 			outputs = append(outputs, SourceOutput{
+				TenantID:       s.Metadata.TenantID,
+				SourceID:       s.Metadata.SourceID,
 				DatabaseName:   s.Config.Database,
 				GroupName:      group,
 				CollectionName: collection,
@@ -58,7 +68,7 @@ func (s *PostgreSQLSource) GenerateOutputs() []SourceOutput {
 			})
 		}
 	}
-	return outputs
+	return outputs, nil
 }
 
 // PostgreSQLSourceConfig holds PostgreSQL-specific configuration.

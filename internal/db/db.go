@@ -1,10 +1,10 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func pgConnectionString(host string, port int, user, password, dbName string) string {
@@ -13,16 +13,7 @@ func pgConnectionString(host string, port int, user, password, dbName string) st
 }
 
 // NewPostgresDB initializes a PostgreSQL connection
-func NewPostgresDB(host string, port int, user, password, dbName string) (*sql.DB, error) {
+func NewPostgresDB(ctx context.Context, host string, port int, user, password, dbName string) (*pgxpool.Pool, error) {
 	pgConnectString := pgConnectionString(host, port, user, password, dbName)
-	sqlDB, err := sql.Open("postgres", pgConnectString)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := sqlDB.Ping(); err != nil {
-		return nil, err
-	}
-
-	return sqlDB, nil
+	return pgxpool.New(ctx, pgConnectString)
 }

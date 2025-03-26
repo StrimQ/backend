@@ -11,7 +11,7 @@ type PipelineTransformerEntity struct {
 	PipelineID    uuid.UUID
 	TransformerID uuid.UUID
 	Stage         int32
-	Config        string
+	Config        []byte
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

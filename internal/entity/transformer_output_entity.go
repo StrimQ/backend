@@ -10,7 +10,7 @@ type TransformerOutputEntity struct {
 	TenantID      uuid.UUID
 	TransformerID uuid.UUID
 	TopicID       uuid.UUID
-	Config        string
+	Config        []byte
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

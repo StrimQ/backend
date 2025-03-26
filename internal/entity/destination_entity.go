@@ -12,7 +12,7 @@ type DestinationEntity struct {
 	DestinationID   uuid.UUID
 	Name            string
 	Engine          enum.DestinationEngine
-	Config          string
+	Config          []byte
 	CreatedByUserID uuid.UUID
 	UpdatedByUserID uuid.UUID
 	CreatedAt       time.Time
