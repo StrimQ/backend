@@ -51,7 +51,7 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 
 	// Insert SourceEntity
 	_, err = tx.Exec(ctx, `
-		INSERT INTO sources (tenant_id, source_id, name, engine, config, created_by_user_id, updated_by_user_id)
+		INSERT INTO source (tenant_id, source_id, name, engine, config, created_by_user_id, updated_by_user_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`, sourceEntity.TenantID, sourceEntity.SourceID, sourceEntity.Name, sourceEntity.Engine,
 		sourceEntity.Config, sourceEntity.CreatedByUserID, sourceEntity.UpdatedByUserID)
@@ -80,7 +80,7 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 		}
 
 		_, err = tx.Exec(ctx, `
-			INSERT INTO topics (tenant_id, topic_id, name, producer_type, producer_id)
+			INSERT INTO topic (tenant_id, topic_id, name, producer_type, producer_id)
 			VALUES ($1, $2, $3, $4, $5)
 		`, topicEntity.TenantID, topicEntity.TopicID, topicEntity.Name, topicEntity.ProducerType, topicEntity.ProducerID)
 		if err != nil {
@@ -100,8 +100,8 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 			CollectionName: output.CollectionName,
 			Config:         outputConfigJSON,
 		}
-		_, err = r.db.Exec(ctx, `
-			INSERT INTO source_outputs (tenant_id, source_id, topic_id, database_name, group_name, collection_name, config)
+		_, err = tx.Exec(ctx, `
+			INSERT INTO source_output (tenant_id, source_id, topic_id, database_name, group_name, collection_name, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`, outputEntity.TenantID, outputEntity.SourceID, outputEntity.TopicID, outputEntity.DatabaseName,
 			outputEntity.GroupName, outputEntity.CollectionName, outputEntity.Config)
