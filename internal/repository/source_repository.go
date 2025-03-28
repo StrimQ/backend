@@ -18,7 +18,7 @@ func NewSourceRepository(db *pgxpool.Pool) *SourceRepository {
 	return &SourceRepository{db}
 }
 
-func (r *SourceRepository) Create(ctx context.Context, source domain.Source) error {
+func (r *SourceRepository) Create(ctx context.Context, source domain.Source) (domain.Source, error) {
 	// Get the user from the context
 	user := ctx.Value(domain.ContextKey_User).(*domain.User)
 	userID := user.UserID
@@ -26,7 +26,7 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_ = tx.Rollback(ctx)
@@ -36,7 +36,7 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 	metadata := source.GetMetadata()
 	configJSON, err := json.Marshal(source.GetConfig())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sourceEntity := entity.SourceEntity{
@@ -56,19 +56,19 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 	`, sourceEntity.TenantID, sourceEntity.SourceID, sourceEntity.Name, sourceEntity.Engine,
 		sourceEntity.Config, sourceEntity.CreatedByUserID, sourceEntity.UpdatedByUserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Generate and insert SourceOutputs
 	outputs, err := source.DeriveOutputs()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, output := range outputs {
 		topic, err := output.DeriveTopic()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		topicEntity := entity.TopicEntity{
@@ -84,12 +84,12 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 			VALUES ($1, $2, $3, $4, $5)
 		`, topicEntity.TenantID, topicEntity.TopicID, topicEntity.Name, topicEntity.ProducerType, topicEntity.ProducerID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		outputConfigJSON, err := json.Marshal(output.Config)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		outputEntity := entity.SourceOutputEntity{
 			TenantID:       sourceEntity.TenantID,
@@ -106,10 +106,14 @@ func (r *SourceRepository) Create(ctx context.Context, source domain.Source) err
 		`, outputEntity.TenantID, outputEntity.SourceID, outputEntity.TopicID, outputEntity.DatabaseName,
 			outputEntity.GroupName, outputEntity.CollectionName, outputEntity.Config)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// Commit the transaction
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return source, nil
 }

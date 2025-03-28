@@ -45,7 +45,7 @@ func NewApp() *App {
 	// Dependency injection
 	sourceRepo := repository.NewSourceRepository(pgDB)
 	sourceService := service.NewSourceService(validate, sourceRepo)
-	sourceController := controller.NewSourceController(validate, sourceService)
+	sourceController := controller.NewSourceController(sourceService)
 
 	router := chi.NewRouter()
 	addMiddlewares(router)
