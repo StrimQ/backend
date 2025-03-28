@@ -14,11 +14,10 @@ type Source interface {
 	GetMetadata() *SourceMetadata
 	GetConfig() SourceConfig
 	DeriveOutputs() ([]SourceOutput, error)
+	DeriveKCConfig() (map[string]string, error)
 }
 
-type SourceConfig interface {
-	Validate(validate *validator.Validate) error
-}
+type SourceConfig interface{}
 
 type SourceMetadata struct {
 	TenantID uuid.UUID         `validate:"required"`

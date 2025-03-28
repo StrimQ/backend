@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"strconv"
+
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
 )
@@ -29,16 +31,6 @@ func (s *MySQLSource) Validate(validate *validator.Validate) error {
 	if err := s.Config.Validate(validate); err != nil {
 		return err
 	}
-
-	config := s.Config
-	if config.Port == nil {
-		defaultPort := 3306
-		config.Port = &defaultPort
-	}
-	if config.BinaryHandlingMode == "" {
-		config.BinaryHandlingMode = enum.SourceBinaryHandlingMode_Bytes
-	}
-
 	return nil
 }
 
@@ -68,6 +60,10 @@ func (s *MySQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	return outputs, nil
 }
 
+func (s *MySQLSource) DeriveKCConfig() (map[string]string, error) {
+	return s.Config.DeriveKCConfig()
+}
+
 // MySQLSourceConfig holds MySQL-specific configuration.
 type MySQLSourceConfig struct {
 	Host               string                         `json:"host" validate:"required,hostname"`
@@ -83,7 +79,33 @@ type MySQLSourceConfig struct {
 	TableHierarchy     map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
 }
 
-// Validate validates the MySQL source configuration.
+// Validate validates the MySQL source configuration and sets default values.
 func (c *MySQLSourceConfig) Validate(validate *validator.Validate) error {
-	return validate.Struct(c)
+	if err := validate.Struct(c); err != nil {
+		return err
+	}
+	if c.Port == nil {
+		defaultPort := 3306
+		c.Port = &defaultPort
+	}
+	if c.BinaryHandlingMode == "" {
+		c.BinaryHandlingMode = enum.SourceBinaryHandlingMode_Bytes
+	}
+	return nil
+}
+
+// DeriveKCConfig generates Kafka Connect configuration based on the MySQL configuration.
+func (c *MySQLSourceConfig) DeriveKCConfig() (map[string]string, error) {
+	return map[string]string{
+		"connector.class":                          "io.debezium.connector.mysql.MySqlConnector",
+		"database.hostname":                        c.Host,
+		"database.port":                            strconv.Itoa(*c.Port),
+		"database.user":                            c.Username,
+		"database.password":                        c.Password,
+		"database.server.id":                       "1",
+		"database.server.name":                     c.Database,
+		"database.whitelist":                       c.Database,
+		"database.history.kafka.bootstrap.servers": "kafka:9092",
+		"database.history.kafka.topic":             "schema-changes." + c.Database,
+	}, nil
 }
