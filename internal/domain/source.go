@@ -13,8 +13,9 @@ type Source interface {
 	Validate(validate *validator.Validate) error
 	GetMetadata() *SourceMetadata
 	GetConfig() SourceConfig
+	GetKCConnectorName() string
 	DeriveOutputs() ([]SourceOutput, error)
-	DeriveKCConfig() (map[string]string, error)
+	DeriveKCConnectorConfig() (map[string]string, error)
 }
 
 type SourceConfig interface{}

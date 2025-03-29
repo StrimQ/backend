@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/StrimQ/backend/internal/enum"
@@ -45,10 +46,18 @@ func (s *PostgreSQLSource) GetConfig() SourceConfig {
 	return s.Config
 }
 
+func (s *PostgreSQLSource) GetKCConnectorName() string {
+	return strings.Join([]string{
+		s.Metadata.TenantID.String(),
+		s.Metadata.SourceID.String(),
+	}, ".",
+	)
+}
+
 // DeriveOutputs generates outputs based on the PostgreSQL configuration.
 func (s *PostgreSQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	var outputs []SourceOutput
-	for group, collections := range s.Config.TableHierarchy {
+	for group, collections := range s.Config.CapturedCollections {
 		for collection, columns := range collections {
 			outputs = append(outputs, SourceOutput{
 				TenantID:       s.Metadata.TenantID,
@@ -63,9 +72,9 @@ func (s *PostgreSQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	return outputs, nil
 }
 
-// DeriveKCConfig generates Kafka Connect configuration based on the PostgreSQL configuration.
-func (s *PostgreSQLSource) DeriveKCConfig() (map[string]string, error) {
-	return s.Config.DeriveKCConfig()
+// DeriveKCConnectorConfig generates Kafka Connect configuration based on the PostgreSQL configuration.
+func (s *PostgreSQLSource) DeriveKCConnectorConfig() (map[string]string, error) {
+	return s.Config.DeriveKCConnectorConfig()
 }
 
 // PostgreSQLSourceConfig holds PostgreSQL-specific configuration.
@@ -74,19 +83,19 @@ type PostgreSQLSourceConfig struct {
 	Port                     int                            `json:"port"`
 	Username                 string                         `json:"username" validate:"required"`
 	Password                 string                         `json:"password" validate:"required"`
-	DBName                   string                         `json:"dbname" validate:"required"`
-	SSLMode                  enum.SourceSSLMode             `json:"sslmode" validate:"omitempty,oneof=disable require"`
-	SlotName                 string                         `json:"slot_name" validate:"required"`
-	PublicationName          string                         `json:"publication_name" validate:"required"`
-	BinaryHandlingMode       enum.SourceBinaryHandlingMode  `json:"binary_handling_mode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
-	HeartbeatEnabled         bool                           `json:"heartbeat_enabled"`
-	HeartbeatIntervalMinutes int                            `json:"heartbeat_interval_minutes,omitempty"`
-	HeartbeatSchema          string                         `json:"heartbeat_schema,omitempty"`
-	HeartbeatTable           string                         `json:"heartbeat_table,omitempty"`
-	ReadOnly                 bool                           `json:"read_only"`
-	SnapshotSignalSchema     string                         `json:"snapshot_signal_schema,omitempty"`
-	SnapshotSignalTable      string                         `json:"snapshot_signal_table,omitempty"`
-	TableHierarchy           map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
+	DBName                   string                         `json:"dbName" validate:"required"`
+	SSLMode                  enum.SourceSSLMode             `json:"sslMode" validate:"omitempty,oneof=disable require"`
+	SlotName                 string                         `json:"slotName" validate:"required"`
+	PublicationName          string                         `json:"publicationName" validate:"required"`
+	BinaryHandlingMode       enum.SourceBinaryHandlingMode  `json:"binaryHandlingMode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
+	HeartbeatEnabled         bool                           `json:"heartbeatEnabled"`
+	HeartbeatIntervalMinutes int                            `json:"heartbeatIntervalMinutes,omitempty"`
+	HeartbeatSchema          string                         `json:"heartbeatSchema,omitempty"`
+	HeartbeatTable           string                         `json:"heartbeatTable,omitempty"`
+	ReadOnly                 bool                           `json:"readOnly"`
+	SnapshotSignalSchema     string                         `json:"snapshotSignalSchema,omitempty"`
+	SnapshotSignalTable      string                         `json:"snapshotSignalTable,omitempty"`
+	CapturedCollections      map[string]map[string][]string `json:"capturedCollections" validate:"required"`
 }
 
 // Validate validates the PostgreSQL source configuration and sets default values.
@@ -134,7 +143,7 @@ func (c *PostgreSQLSourceConfig) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-func (c *PostgreSQLSourceConfig) DeriveKCConfig() (map[string]string, error) {
+func (c *PostgreSQLSourceConfig) DeriveKCConnectorConfig() (map[string]string, error) {
 	kcConfig := map[string]string{
 		"connector.class":      "io.debezium.connector.postgresql.PostgresConnector",
 		"database.hostname":    c.Hostname,
@@ -149,6 +158,18 @@ func (c *PostgreSQLSourceConfig) DeriveKCConfig() (map[string]string, error) {
 		"read.only":            strconv.FormatBool(c.ReadOnly),
 		"snapshot.mode":        "no_data",
 	}
+
+	tableIncludeList := make([]string, 0)
+	columnIncludeList := make([]string, 0)
+	for group, collections := range c.CapturedCollections {
+		for collection, columns := range collections {
+			tableIncludeList = append(tableIncludeList, fmt.Sprintf("%s.%s", group, collection))
+			for _, column := range columns {
+				columnIncludeList = append(columnIncludeList, fmt.Sprintf("%s.%s.%s", group, collection, column))
+			}
+		}
+	}
+
 	if c.HeartbeatEnabled {
 		heartbeatIntervalMS := (time.Duration(c.HeartbeatIntervalMinutes) * time.Minute).Milliseconds()
 		kcConfig["heartbeat.interval.ms"] = strconv.FormatInt(heartbeatIntervalMS, 10)
@@ -156,10 +177,16 @@ func (c *PostgreSQLSourceConfig) DeriveKCConfig() (map[string]string, error) {
 		if !c.ReadOnly && c.HeartbeatSchema != "" && c.HeartbeatTable != "" {
 			query := fmt.Sprintf("INSERT INTO %s.%s (id, last_heartbeat) VALUES (%d, NOW()) ON CONFLICT (id) DO UPDATE SET last_heartbeat = now()", c.HeartbeatSchema, c.HeartbeatTable, 1)
 			kcConfig["heartbeat.action.query"] = query
+			tableIncludeList = append(tableIncludeList, fmt.Sprintf("%s.%s", c.HeartbeatSchema, c.HeartbeatTable))
 		}
 	}
 	if !c.ReadOnly && c.SnapshotSignalSchema != "" && c.SnapshotSignalTable != "" {
 		kcConfig["signal.data.collection"] = fmt.Sprintf("%s.%s", c.SnapshotSignalSchema, c.SnapshotSignalTable)
+		tableIncludeList = append(tableIncludeList, fmt.Sprintf("%s.%s", c.SnapshotSignalSchema, c.SnapshotSignalTable))
 	}
+
+	kcConfig["table.include.list"] = strings.Join(tableIncludeList, ",")
+	kcConfig["column.include.list"] = strings.Join(columnIncludeList, ",")
+
 	return kcConfig, nil
 }

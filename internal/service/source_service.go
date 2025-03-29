@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/StrimQ/backend/internal/client"
 	"github.com/StrimQ/backend/internal/domain"
 	"github.com/StrimQ/backend/internal/dto"
 	"github.com/StrimQ/backend/internal/mapper"
@@ -48,6 +49,18 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 
 	// Validate the source domain
 	if err := source.Validate(s.validate); err != nil {
+		return nil, err
+	}
+
+	// Derive Kafka Connect configuration
+	sourceKCConfig, err := source.DeriveKCConnectorConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the connector in Kafka Connect
+	kcClient := client.NewKafkaConnectClient("http://kafka-connect:8083", 10)
+	if err := kcClient.CreateConnnector(ctx, source.GetKCConnectorName(), sourceKCConfig); err != nil {
 		return nil, err
 	}
 

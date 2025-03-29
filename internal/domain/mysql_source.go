@@ -2,6 +2,7 @@ package domain
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
@@ -42,10 +43,18 @@ func (s *MySQLSource) GetConfig() SourceConfig {
 	return s.Config
 }
 
+func (s *MySQLSource) GetKCConnectorName() string {
+	return strings.Join([]string{
+		s.Metadata.TenantID.String(),
+		s.Metadata.SourceID.String(),
+	}, ".",
+	)
+}
+
 // DeriveOutputs generates outputs based on the MySQL configuration.
 func (s *MySQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	var outputs []SourceOutput
-	for group, collections := range s.Config.TableHierarchy {
+	for group, collections := range s.Config.CapturedCollections {
 		for collection, columns := range collections {
 			outputs = append(outputs, SourceOutput{
 				TenantID:       s.Metadata.TenantID,
@@ -60,23 +69,23 @@ func (s *MySQLSource) DeriveOutputs() ([]SourceOutput, error) {
 	return outputs, nil
 }
 
-func (s *MySQLSource) DeriveKCConfig() (map[string]string, error) {
-	return s.Config.DeriveKCConfig()
+func (s *MySQLSource) DeriveKCConnectorConfig() (map[string]string, error) {
+	return s.Config.DeriveKCConnectorConfig()
 }
 
 // MySQLSourceConfig holds MySQL-specific configuration.
 type MySQLSourceConfig struct {
-	Host               string                         `json:"host" validate:"required,hostname"`
-	Port               *int                           `json:"port"`
-	Database           string                         `json:"database" validate:"required"`
-	Username           string                         `json:"username" validate:"required"`
-	Password           string                         `json:"password" validate:"required"`
-	BinaryHandlingMode enum.SourceBinaryHandlingMode  `json:"binary_handling_mode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
-	HeartbeatEnabled   bool                           `json:"heartbeat_enabled"`
-	HeartbeatInterval  *int                           `json:"heartbeat_interval" validate:"required_with=HeartbeatEnabled"`
-	HeartbeatSchema    *string                        `json:"heartbeat_schema" validate:"required_with=HeartbeatEnabled"`
-	HeartbeatTable     *string                        `json:"heartbeat_table" validate:"required_with=HeartbeatEnabled"`
-	TableHierarchy     map[string]map[string][]string `json:"table_hierarchy" validate:"required"`
+	Host                string                         `json:"host" validate:"required,hostname"`
+	Port                *int                           `json:"port"`
+	Database            string                         `json:"database" validate:"required"`
+	Username            string                         `json:"username" validate:"required"`
+	Password            string                         `json:"password" validate:"required"`
+	BinaryHandlingMode  enum.SourceBinaryHandlingMode  `json:"binaryHandlingMode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
+	HeartbeatEnabled    bool                           `json:"heartbeatEnabled"`
+	HeartbeatInterval   *int                           `json:"heartbeatInterval" validate:"required_with=HeartbeatEnabled"`
+	HeartbeatSchema     *string                        `json:"heartbeatSchema" validate:"required_with=HeartbeatEnabled"`
+	HeartbeatTable      *string                        `json:"heartbeatTable" validate:"required_with=HeartbeatEnabled"`
+	CapturedCollections map[string]map[string][]string `json:"capturedCollections" validate:"required"`
 }
 
 // Validate validates the MySQL source configuration and sets default values.
@@ -94,8 +103,8 @@ func (c *MySQLSourceConfig) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-// DeriveKCConfig generates Kafka Connect configuration based on the MySQL configuration.
-func (c *MySQLSourceConfig) DeriveKCConfig() (map[string]string, error) {
+// DeriveKCConnectorConfig generates Kafka Connect configuration based on the MySQL configuration.
+func (c *MySQLSourceConfig) DeriveKCConnectorConfig() (map[string]string, error) {
 	return map[string]string{
 		"connector.class":                          "io.debezium.connector.mysql.MySqlConnector",
 		"database.hostname":                        c.Host,
