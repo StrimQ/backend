@@ -3,116 +3,92 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/StrimQ/backend/internal/domain"
-	"github.com/StrimQ/backend/internal/entity"
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// SourceRepository handles source-related database operations.
 type SourceRepository struct {
 	db *pgxpool.Pool
 }
 
+// NewSourceRepository creates a new SourceRepository instance.
 func NewSourceRepository(db *pgxpool.Pool) *SourceRepository {
 	return &SourceRepository{db}
 }
 
-func (r *SourceRepository) Create(ctx context.Context, source domain.Source) (domain.Source, error) {
-	// Get the user from the context
-	user := ctx.Value(domain.ContextKey_User).(*domain.User)
-	userID := user.UserID
-
+// Create inserts a new source into the database along with its outputs and topics.
+func (r *SourceRepository) Create(ctx context.Context, source *domain.Source) (*domain.Source, error) {
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback(ctx) // Rollback if not committed
 	}()
 
-	// Convert domain.Source to entity.SourceEntity
-	metadata := source.GetMetadata()
-	configJSON, err := json.Marshal(source.GetConfig())
+	// Serialize the source config to JSON
+	configJSON, err := source.Config.AsBytes()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to serialize source config: %w", err)
 	}
 
-	sourceEntity := entity.SourceEntity{
-		TenantID:        metadata.TenantID,
-		SourceID:        metadata.SourceID,
-		Name:            metadata.Name,
-		Engine:          metadata.Engine,
-		Config:          configJSON,
-		CreatedByUserID: userID,
-		UpdatedByUserID: userID,
-	}
-
-	// Insert SourceEntity
+	// Insert the source into the database
 	_, err = tx.Exec(ctx, `
 		INSERT INTO source (tenant_id, source_id, name, engine, config, created_by_user_id, updated_by_user_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, sourceEntity.TenantID, sourceEntity.SourceID, sourceEntity.Name, sourceEntity.Engine,
-		sourceEntity.Config, sourceEntity.CreatedByUserID, sourceEntity.UpdatedByUserID)
+	`, source.TenantID, source.SourceID, source.Name, source.Engine,
+		configJSON, source.CreatedByUserID, source.UpdatedByUserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to insert source: %w", err)
 	}
 
-	// Generate and insert SourceOutputs
-	outputs, err := source.DeriveOutputs()
+	// Generate and insert source outputs
+	outputs, err := source.GenerateOutputs()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate source outputs: %w", err)
 	}
 
+	source.Outputs = outputs
 	for _, output := range outputs {
-		topic, err := output.DeriveTopic()
+		// Generate and insert the topic
+		topic, err := output.GenerateTopic()
 		if err != nil {
-			return nil, err
-		}
-
-		topicEntity := entity.TopicEntity{
-			TenantID:     sourceEntity.TenantID,
-			TopicID:      topic.TopicID,
-			Name:         topic.Name,
-			ProducerType: enum.TopicProducerType_Source,
-			ProducerID:   sourceEntity.SourceID,
+			return nil, fmt.Errorf("failed to generate topic for output: %w", err)
 		}
 
 		_, err = tx.Exec(ctx, `
 			INSERT INTO topic (tenant_id, topic_id, name, producer_type, producer_id)
 			VALUES ($1, $2, $3, $4, $5)
-		`, topicEntity.TenantID, topicEntity.TopicID, topicEntity.Name, topicEntity.ProducerType, topicEntity.ProducerID)
+		`, source.TenantID, topic.TopicID, topic.Name, enum.TopicProducerType_Source, source.SourceID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to insert topic: %w", err)
 		}
 
+		// Serialize the output config
 		outputConfigJSON, err := json.Marshal(output.Config)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to serialize output config: %w", err)
 		}
-		outputEntity := entity.SourceOutputEntity{
-			TenantID:       sourceEntity.TenantID,
-			SourceID:       sourceEntity.SourceID,
-			TopicID:        topicEntity.TopicID,
-			DatabaseName:   output.DatabaseName,
-			GroupName:      output.GroupName,
-			CollectionName: output.CollectionName,
-			Config:         outputConfigJSON,
-		}
+
+		// Insert the source output
 		_, err = tx.Exec(ctx, `
 			INSERT INTO source_output (tenant_id, source_id, topic_id, database_name, group_name, collection_name, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, outputEntity.TenantID, outputEntity.SourceID, outputEntity.TopicID, outputEntity.DatabaseName,
-			outputEntity.GroupName, outputEntity.CollectionName, outputEntity.Config)
+		`, source.TenantID, source.SourceID, topic.TopicID, output.DatabaseName,
+			output.GroupName, output.CollectionName, outputConfigJSON)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to insert source output: %w", err)
 		}
 	}
 
 	// Commit the transaction
 	if err := tx.Commit(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return source, nil

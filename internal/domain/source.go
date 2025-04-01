@@ -3,50 +3,122 @@ package domain
 import (
 	"strings"
 
+	"time"
+
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 // Source defines the common behavior for all source types.
-type Source interface {
+type Source struct {
+	TenantID        uuid.UUID
+	SourceID        uuid.UUID
+	Name            string            `validate:"required"`
+	Engine          enum.SourceEngine `validate:"required,oneof=mysql postgresql"`
+	Config          SourceConfig
+	CreatedByUserID uuid.UUID
+	UpdatedByUserID uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+
+	// Associations
+	Outputs []SourceOutput
+}
+
+func NewSource(
+	tenantID uuid.UUID,
+	sourceID uuid.UUID,
+	name string,
+	engine enum.SourceEngine,
+	config SourceConfig,
+	createdByUserID uuid.UUID,
+	updatedByUserID uuid.UUID,
+) *Source {
+	return &Source{
+		TenantID:        tenantID,
+		SourceID:        sourceID,
+		Name:            name,
+		Engine:          engine,
+		Config:          config,
+		CreatedByUserID: createdByUserID,
+		UpdatedByUserID: updatedByUserID,
+	}
+}
+
+func (s *Source) Validate(validate *validator.Validate) error {
+	if err := validate.Struct(s); err != nil {
+		return err
+	}
+	if err := s.Config.Validate(validate); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Source) GenerateOutputs() ([]SourceOutput, error) {
+	return s.Config.GenerateOutputs(s.TenantID, s.SourceID)
+}
+
+func (s *Source) GenerateKCConnectorName() string {
+	return strings.Join([]string{
+		s.TenantID.String(),
+		s.SourceID.String(),
+	}, ".",
+	)
+}
+
+func (s *Source) GenerateKCConnectorConfig() (map[string]string, error) {
+	return s.Config.GenerateKCConnectorConfig()
+}
+
+type SourceConfig interface {
 	Validate(validate *validator.Validate) error
-	GetMetadata() *SourceMetadata
-	GetConfig() SourceConfig
-	GetKCConnectorName() string
-	DeriveOutputs() ([]SourceOutput, error)
-	DeriveKCConnectorConfig() (map[string]string, error)
-}
-
-type SourceConfig interface{}
-
-type SourceMetadata struct {
-	TenantID uuid.UUID         `validate:"required"`
-	SourceID uuid.UUID         `validate:"required"`
-	Name     string            `validate:"required"`
-	Engine   enum.SourceEngine `validate:"required,oneof=mysql postgresql"`
-}
-
-func (m *SourceMetadata) Validate(validate *validator.Validate) error {
-	return validate.Struct(m)
+	AsBytes() ([]byte, error)
+	GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceOutput, error)
+	GenerateKCConnectorConfig() (map[string]string, error)
 }
 
 type SourceOutput struct {
-	TenantID       uuid.UUID `validate:"required"`
-	SourceID       uuid.UUID `validate:"required"`
+	TenantID       uuid.UUID
+	SourceID       uuid.UUID
+	TopicID        uuid.UUID
 	DatabaseName   string
 	GroupName      string
-	CollectionName string `validate:"required"`
-	Config         map[string]any
+	CollectionName string         `validate:"required"`
+	Config         map[string]any `validate:"required"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+
+	// Associations
+	Topic Topic
 }
 
-func (o *SourceOutput) DeriveTopic() (*Topic, error) {
+func NewSourceOutput(
+	tenantID uuid.UUID,
+	sourceID uuid.UUID,
+	databaseName string,
+	groupName string,
+	collectionName string,
+	config map[string]any,
+) *SourceOutput {
+	return &SourceOutput{
+		TenantID:       tenantID,
+		SourceID:       sourceID,
+		DatabaseName:   databaseName,
+		GroupName:      groupName,
+		CollectionName: collectionName,
+		Config:         config,
+	}
+}
+
+func (o *SourceOutput) GenerateTopic() (*Topic, error) {
 	topicID, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	// Derive the topic name from the output
+	// Generate the topic name from the output
 	nameParts := []string{
 		o.TenantID.String(),
 		o.SourceID.String(),

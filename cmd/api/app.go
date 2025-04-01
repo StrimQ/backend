@@ -21,8 +21,6 @@ import (
 // App holds application components for dependency injection
 type App struct {
 	router *chi.Mux
-
-	validate *validator.Validate
 }
 
 // NewApp initializes the application
@@ -52,8 +50,7 @@ func NewApp() *App {
 	addRoutes(router, sourceController)
 
 	return &App{
-		router:   router,
-		validate: validate,
+		router: router,
 	}
 }
 

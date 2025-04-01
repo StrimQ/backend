@@ -32,7 +32,7 @@ CREATE TABLE "tenant" (
   PRIMARY KEY ("tenant_id")
 );
 
-CREATE TABLE "user" (
+CREATE TABLE "users" (
   "user_id" UUID,
   "created_at" timestamp NOT NULL DEFAULT (NOW()),
   "updated_at" timestamp NOT NULL DEFAULT (NOW()),
@@ -203,21 +203,21 @@ ALTER TABLE "tenant" ADD FOREIGN KEY ("infra_id") REFERENCES "tenant_infra" ("te
 
 ALTER TABLE "tenant_user" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "tenant_user" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "tenant_user" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "tag" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "tag" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "tag" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "tag" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "tag" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "topic" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "source" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "source_output" ADD FOREIGN KEY ("tenant_id", "source_id") REFERENCES "source" ("tenant_id", "source_id") DEFERRABLE INITIALLY DEFERRED;
 
@@ -225,9 +225,9 @@ ALTER TABLE "source_output" ADD FOREIGN KEY ("tenant_id", "topic_id") REFERENCES
 
 ALTER TABLE "transformer" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "transformer" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "transformer" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "transformer_input" ADD FOREIGN KEY ("tenant_id", "transformer_id") REFERENCES "transformer" ("tenant_id", "transfomer_id") DEFERRABLE INITIALLY DEFERRED;
 
@@ -239,9 +239,9 @@ ALTER TABLE "transformer_output" ADD FOREIGN KEY ("tenant_id", "topic_id") REFER
 
 ALTER TABLE "destination" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "destination" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "destination" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "destination" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "destination" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "pipeline" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
@@ -249,9 +249,9 @@ ALTER TABLE "pipeline" ADD FOREIGN KEY ("tenant_id", "source_id") REFERENCES "so
 
 ALTER TABLE "pipeline" ADD FOREIGN KEY ("tenant_id", "destination_id") REFERENCES "destination" ("tenant_id", "destination_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "pipeline" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "pipeline" ADD FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "pipeline" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "user" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "pipeline" ADD FOREIGN KEY ("updated_by_user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "pipeline_transformer" ADD FOREIGN KEY ("tenant_id", "pipeline_id") REFERENCES "pipeline" ("tenant_id", "pipeline_id") DEFERRABLE INITIALLY DEFERRED;
 

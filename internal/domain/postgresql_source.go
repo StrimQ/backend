@@ -6,76 +6,14 @@ import (
 	"strings"
 	"time"
 
+	"encoding/json"
+
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
-// PostgreSQLSource represents a PostgreSQL data source.
-type PostgreSQLSource struct {
-	Metadata *SourceMetadata         `validate:"required"`
-	Config   *PostgreSQLSourceConfig `validate:"required"`
-}
-
-// NewPostgreSQLSource creates a new PostgreSQLSource instance.
-func NewPostgreSQLSource(metadata *SourceMetadata, config *PostgreSQLSourceConfig) *PostgreSQLSource {
-	return &PostgreSQLSource{
-		Metadata: metadata,
-		Config:   config,
-	}
-}
-
-// Validate validates the PostgreSQL source.
-func (s *PostgreSQLSource) Validate(validate *validator.Validate) error {
-	if err := validate.Struct(s); err != nil {
-		return err
-	}
-	if err := s.Metadata.Validate(validate); err != nil {
-		return err
-	}
-	if err := s.Config.Validate(validate); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *PostgreSQLSource) GetMetadata() *SourceMetadata {
-	return s.Metadata
-}
-
-func (s *PostgreSQLSource) GetConfig() SourceConfig {
-	return s.Config
-}
-
-func (s *PostgreSQLSource) GetKCConnectorName() string {
-	return strings.Join([]string{
-		s.Metadata.TenantID.String(),
-		s.Metadata.SourceID.String(),
-	}, ".",
-	)
-}
-
-// DeriveOutputs generates outputs based on the PostgreSQL configuration.
-func (s *PostgreSQLSource) DeriveOutputs() ([]SourceOutput, error) {
-	var outputs []SourceOutput
-	for group, collections := range s.Config.CapturedCollections {
-		for collection, columns := range collections {
-			outputs = append(outputs, SourceOutput{
-				TenantID:       s.Metadata.TenantID,
-				SourceID:       s.Metadata.SourceID,
-				DatabaseName:   s.Config.DBName,
-				GroupName:      group,
-				CollectionName: collection,
-				Config:         map[string]any{"columns": columns},
-			})
-		}
-	}
-	return outputs, nil
-}
-
-// DeriveKCConnectorConfig generates Kafka Connect configuration based on the PostgreSQL configuration.
-func (s *PostgreSQLSource) DeriveKCConnectorConfig() (map[string]string, error) {
-	return s.Config.DeriveKCConnectorConfig()
-}
+var _ SourceConfig = (*PostgreSQLSourceConfig)(nil)
 
 // PostgreSQLSourceConfig holds PostgreSQL-specific configuration.
 type PostgreSQLSourceConfig struct {
@@ -143,7 +81,30 @@ func (c *PostgreSQLSourceConfig) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-func (c *PostgreSQLSourceConfig) DeriveKCConnectorConfig() (map[string]string, error) {
+func (c *PostgreSQLSourceConfig) AsBytes() ([]byte, error) {
+	return json.Marshal(c)
+}
+
+func (c *PostgreSQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceOutput, error) {
+	// Generate outputs based on the captured collections
+	// and their respective columns.
+	outputs := make([]SourceOutput, 0)
+	for group, collections := range c.CapturedCollections {
+		for collection, columns := range collections {
+			outputs = append(outputs, *NewSourceOutput(
+				tenantID,
+				sourceID,
+				c.DBName,
+				group,
+				collection,
+				map[string]any{"columns": columns},
+			))
+		}
+	}
+	return outputs, nil
+}
+
+func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {
 	kcConfig := map[string]string{
 		"connector.class":      "io.debezium.connector.postgresql.PostgresConnector",
 		"database.hostname":    c.Hostname,

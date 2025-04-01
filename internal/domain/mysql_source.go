@@ -1,91 +1,33 @@
 package domain
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
-type MySQLSource struct {
-	Metadata *SourceMetadata    `validate:"required"`
-	Config   *MySQLSourceConfig `validate:"required"`
-}
-
-// NewMySQLSource creates a new MySQLSource instance.
-func NewMySQLSource(metadata *SourceMetadata, config *MySQLSourceConfig) *MySQLSource {
-	return &MySQLSource{
-		Metadata: metadata,
-		Config:   config,
-	}
-}
-
-// Validate validates the MySQL source and sets default values.
-func (s *MySQLSource) Validate(validate *validator.Validate) error {
-	if err := validate.Struct(s); err != nil {
-		return err
-	}
-	if err := s.Metadata.Validate(validate); err != nil {
-		return err
-	}
-	if err := s.Config.Validate(validate); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *MySQLSource) GetMetadata() *SourceMetadata {
-	return s.Metadata
-}
-
-func (s *MySQLSource) GetConfig() SourceConfig {
-	return s.Config
-}
-
-func (s *MySQLSource) GetKCConnectorName() string {
-	return strings.Join([]string{
-		s.Metadata.TenantID.String(),
-		s.Metadata.SourceID.String(),
-	}, ".",
-	)
-}
-
-// DeriveOutputs generates outputs based on the MySQL configuration.
-func (s *MySQLSource) DeriveOutputs() ([]SourceOutput, error) {
-	var outputs []SourceOutput
-	for group, collections := range s.Config.CapturedCollections {
-		for collection, columns := range collections {
-			outputs = append(outputs, SourceOutput{
-				TenantID:       s.Metadata.TenantID,
-				SourceID:       s.Metadata.SourceID,
-				DatabaseName:   s.Config.Database,
-				GroupName:      group,
-				CollectionName: collection,
-				Config:         map[string]any{"columns": columns},
-			})
-		}
-	}
-	return outputs, nil
-}
-
-func (s *MySQLSource) DeriveKCConnectorConfig() (map[string]string, error) {
-	return s.Config.DeriveKCConnectorConfig()
-}
+// Ensure MySQLSourceConfig implements SourceConfig
+var _ SourceConfig = (*MySQLSourceConfig)(nil)
 
 // MySQLSourceConfig holds MySQL-specific configuration.
 type MySQLSourceConfig struct {
-	Host                string                         `json:"host" validate:"required,hostname"`
-	Port                *int                           `json:"port"`
-	Database            string                         `json:"database" validate:"required"`
-	Username            string                         `json:"username" validate:"required"`
-	Password            string                         `json:"password" validate:"required"`
-	BinaryHandlingMode  enum.SourceBinaryHandlingMode  `json:"binaryHandlingMode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
-	HeartbeatEnabled    bool                           `json:"heartbeatEnabled"`
-	HeartbeatInterval   *int                           `json:"heartbeatInterval" validate:"required_with=HeartbeatEnabled"`
-	HeartbeatSchema     *string                        `json:"heartbeatSchema" validate:"required_with=HeartbeatEnabled"`
-	HeartbeatTable      *string                        `json:"heartbeatTable" validate:"required_with=HeartbeatEnabled"`
-	CapturedCollections map[string]map[string][]string `json:"capturedCollections" validate:"required"`
+	ServerName               string                         `json:"serverName" validate:"required"`
+	Host                     string                         `json:"host" validate:"required,hostname"`
+	Port                     int                            `json:"port"`
+	Database                 string                         `json:"database" validate:"required"`
+	Username                 string                         `json:"username" validate:"required"`
+	Password                 string                         `json:"password" validate:"required"`
+	BinaryHandlingMode       enum.SourceBinaryHandlingMode  `json:"binaryHandlingMode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
+	HeartbeatEnabled         bool                           `json:"heartbeatEnabled"`
+	HeartbeatIntervalMinutes int                            `json:"heartbeatIntervalMinutes,omitempty"`
+	SignalTable              string                         `json:"signalTable,omitempty"`
+	CapturedCollections      map[string]map[string][]string `json:"capturedCollections" validate:"required"`
 }
 
 // Validate validates the MySQL source configuration and sets default values.
@@ -93,28 +35,77 @@ func (c *MySQLSourceConfig) Validate(validate *validator.Validate) error {
 	if err := validate.Struct(c); err != nil {
 		return err
 	}
-	if c.Port == nil {
-		defaultPort := 3306
-		c.Port = &defaultPort
+	if c.Port == 0 {
+		c.Port = 3306 // Default MySQL port
 	}
 	if c.BinaryHandlingMode == "" {
 		c.BinaryHandlingMode = enum.SourceBinaryHandlingMode_Bytes
 	}
+	if c.HeartbeatEnabled && c.HeartbeatIntervalMinutes == 0 {
+		c.HeartbeatIntervalMinutes = 5 // Default to 5 minutes
+	}
 	return nil
 }
 
-// DeriveKCConnectorConfig generates Kafka Connect configuration based on the MySQL configuration.
-func (c *MySQLSourceConfig) DeriveKCConnectorConfig() (map[string]string, error) {
-	return map[string]string{
+// AsBytes serializes the configuration to JSON bytes.
+func (c *MySQLSourceConfig) AsBytes() ([]byte, error) {
+	return json.Marshal(c)
+}
+
+// GenerateOutputs generates SourceOutput instances based on captured collections.
+func (c *MySQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceOutput, error) {
+	outputs := make([]SourceOutput, 0)
+	for db, tables := range c.CapturedCollections {
+		for table, columns := range tables {
+			outputs = append(outputs, *NewSourceOutput(
+				tenantID,
+				sourceID,
+				db, // Database name from CapturedCollections
+				"", // GroupName not used in MySQL context
+				table,
+				map[string]any{"columns": columns},
+			))
+		}
+	}
+	return outputs, nil
+}
+
+// GenerateKCConnectorConfig generates Kafka Connect configuration for the MySQL connector.
+func (c *MySQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {
+	kcConfig := map[string]string{
 		"connector.class":                          "io.debezium.connector.mysql.MySqlConnector",
 		"database.hostname":                        c.Host,
-		"database.port":                            strconv.Itoa(*c.Port),
+		"database.port":                            strconv.Itoa(c.Port),
 		"database.user":                            c.Username,
 		"database.password":                        c.Password,
-		"database.server.id":                       "1",
-		"database.server.name":                     c.Database,
-		"database.whitelist":                       c.Database,
+		"database.server.id":                       "1", // Consider making configurable in production
+		"database.server.name":                     c.ServerName,
 		"database.history.kafka.bootstrap.servers": "kafka:9092",
-		"database.history.kafka.topic":             "schema-changes." + c.Database,
-	}, nil
+		"database.history.kafka.topic":             "schema-changes." + c.ServerName,
+		"binary.handling.mode":                     string(c.BinaryHandlingMode),
+	}
+
+	// Configure heartbeat if enabled
+	if c.HeartbeatEnabled {
+		heartbeatIntervalMS := (time.Duration(c.HeartbeatIntervalMinutes) * time.Minute).Milliseconds()
+		kcConfig["heartbeat.interval.ms"] = strconv.FormatInt(heartbeatIntervalMS, 10)
+	}
+
+	// Configure signal table if specified
+	if c.SignalTable != "" {
+		kcConfig["signal.data.collection"] = fmt.Sprintf("%s.%s", c.Database, c.SignalTable)
+	}
+
+	// Build table.include.list from CapturedCollections
+	tableIncludeList := make([]string, 0)
+	for db, tables := range c.CapturedCollections {
+		for table := range tables {
+			tableIncludeList = append(tableIncludeList, fmt.Sprintf("%s.%s", db, table))
+		}
+	}
+	if len(tableIncludeList) > 0 {
+		kcConfig["table.include.list"] = strings.Join(tableIncludeList, ",")
+	}
+
+	return kcConfig, nil
 }

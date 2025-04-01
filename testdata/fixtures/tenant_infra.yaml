@@ -1,6 +1,6 @@
 - tenant_infra_id: ffffffff-ffff-ffff-ffff-ffffffffffff
   name: Test Tenant Infra
-  kafka_brokers: RAW='{test.kafka.broker1:9092,test.kafka.broker2:9092}'
-  schema_registry_url: http://test.schema.registry:8081
-  kafka_connect_url: http://test.kafka.connect:8083
+  kafka_brokers: RAW='{kafka-0:9092,kafka-1:9092}'
+  schema_registry_url: http://localhost:8081
+  kafka_connect_url: http://localhost:8083
   kms_key: arn:aws:kms:ap-southeast-1:123456789012:key/ffffffff-ffff-ffff-ffff-ffffffffffff

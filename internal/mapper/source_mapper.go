@@ -1,8 +1,9 @@
 package mapper
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/StrimQ/backend/internal/domain"
 	"github.com/StrimQ/backend/internal/dto"
@@ -10,42 +11,55 @@ import (
 	"github.com/google/uuid"
 )
 
-// SourceReqDTOToDomain maps a SourceDTO to a domain.Source.
-func SourceReqDTOToDomain(user *domain.User, sourceID uuid.UUID, sourceReqDTO *dto.SourceReqDTO) (domain.Source, error) {
-	// Create source metadata
-	metadata := &domain.SourceMetadata{
-		TenantID: user.TenantID,
-		SourceID: sourceID,
-		Name:     sourceReqDTO.Name,
-		Engine:   sourceReqDTO.Engine,
+// SourceReqDTOToDomain maps a SourceReqDTO to a domain.Source.
+func SourceReqDTOToDomain(ctx context.Context, sourceReqDTO *dto.SourceReqDTO) (*domain.Source, error) {
+	// Extract user from context
+	user, ok := ctx.Value(domain.ContextKey_User).(*domain.User)
+	if !ok || user == nil {
+		return nil, &ErrUserNotFound{}
 	}
 
-	// Create source based on engine
+	// Generate a new UUID for the source
+	sourceID, err := uuid.NewV7()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate source ID: %w", err)
+	}
+
+	// Determine and unmarshal the config based on the engine
+	var config domain.SourceConfig
 	switch sourceReqDTO.Engine {
 	case enum.SourceEngine_Mysql:
-		var config domain.MySQLSourceConfig
-		if err := json.Unmarshal(sourceReqDTO.Config, &config); err != nil {
-			return nil, err
+		var mysqlConfig domain.MySQLSourceConfig
+		if err := json.Unmarshal(sourceReqDTO.Config, &mysqlConfig); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal MySQL config: %w", err)
 		}
-		source := domain.NewMySQLSource(metadata, &config)
-		return source, nil
+		config = &mysqlConfig
 	case enum.SourceEngine_Postgresql:
-		var config domain.PostgreSQLSourceConfig
-		if err := json.Unmarshal(sourceReqDTO.Config, &config); err != nil {
-			return nil, err
+		var pgConfig domain.PostgreSQLSourceConfig
+		if err := json.Unmarshal(sourceReqDTO.Config, &pgConfig); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal PostgreSQL config: %w", err)
 		}
-		source := domain.NewPostgreSQLSource(metadata, &config)
-		return source, nil
+		config = &pgConfig
 	default:
-		return nil, errors.New("invalid source engine")
+		return nil, fmt.Errorf("invalid source engine: %s", sourceReqDTO.Engine)
 	}
+
+	return domain.NewSource(
+		user.TenantID,
+		sourceID,
+		sourceReqDTO.Name,
+		sourceReqDTO.Engine,
+		config,
+		user.UserID,
+		user.UserID,
+	), nil
 }
 
-func SourceDomainToRespDTO(source domain.Source) (*dto.SourceRespDTO, error) {
+// SourceDomainToRespDTO maps a domain.Source to a SourceRespDTO.
+func SourceDomainToRespDTO(source *domain.Source) (*dto.SourceRespDTO, error) {
 	return &dto.SourceRespDTO{
-		Name:   source.GetMetadata().Name,
-		Engine: source.GetMetadata().Engine,
-		// Config: source.GetConfig(),
-		// Status: source.GetStatus(),
+		Name:   source.Name,
+		Engine: source.Engine,
+		// Add additional fields like Status or Config if required
 	}, nil
 }
