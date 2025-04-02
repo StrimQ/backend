@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt time.Time
 
 	// Associations
-	Tenant Tenant
+	Tenant *Tenant
 }
 
 // NewUser creates a new User instance.
@@ -36,16 +36,15 @@ type Tenant struct {
 	UpdatedAt time.Time
 
 	// Associations
-	Infra TenantInfra
+	Infra *TenantInfra
 }
 
-func NewTenant(tenantID, name, domain, tier string, infra TenantInfra) *Tenant {
+func NewTenant(tenantID, name, domain, tier string) *Tenant {
 	return &Tenant{
 		TenantID: tenantID,
 		Name:     name,
 		Domain:   domain,
 		Tier:     tier,
-		Infra:    infra,
 	}
 }
 

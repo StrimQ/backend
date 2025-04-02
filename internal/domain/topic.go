@@ -16,3 +16,19 @@ type Topic struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
+
+func NewTopic(
+	tenantID uuid.UUID,
+	topicID uuid.UUID,
+	name string,
+	producerType enum.TopicProducerType,
+	producerID uuid.UUID,
+) *Topic {
+	return &Topic{
+		TenantID:     tenantID,
+		TopicID:      topicID,
+		Name:         name,
+		ProducerType: producerType,
+		ProducerID:   producerID,
+	}
+}

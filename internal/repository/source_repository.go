@@ -20,8 +20,8 @@ func NewSourceRepository(db *pgxpool.Pool) *SourceRepository {
 	return &SourceRepository{db}
 }
 
-// Create inserts a new source into the database along with its outputs and topics.
-func (r *SourceRepository) Create(ctx context.Context, source *domain.Source) (*domain.Source, error) {
+// Add inserts a new source into the database along with its outputs and topics.
+func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*domain.Source, error) {
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -47,19 +47,9 @@ func (r *SourceRepository) Create(ctx context.Context, source *domain.Source) (*
 		return nil, fmt.Errorf("failed to insert source: %w", err)
 	}
 
-	// Generate and insert source outputs
-	outputs, err := source.GenerateOutputs()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate source outputs: %w", err)
-	}
-
-	source.Outputs = outputs
-	for _, output := range outputs {
+	for _, output := range source.Outputs {
 		// Generate and insert the topic
-		topic, err := output.GenerateTopic()
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate topic for output: %w", err)
-		}
+		topic := output.Topic
 
 		_, err = tx.Exec(ctx, `
 			INSERT INTO topic (tenant_id, topic_id, name, producer_type, producer_id)

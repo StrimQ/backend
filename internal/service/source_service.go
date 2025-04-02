@@ -41,6 +41,20 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 		return nil, err
 	}
 
+	// Generate outputs and topics for the source
+	outputs, err := source.GenerateOutputs()
+	if err != nil {
+		return nil, err
+	}
+	source.Outputs = outputs
+	for _, output := range outputs {
+		topic, err := output.GenerateTopic()
+		if err != nil {
+			return nil, err
+		}
+		output.Topic = topic
+	}
+
 	// Generate Kafka Connect configuration
 	sourceKCConfig, err := source.GenerateKCConnectorConfig()
 	if err != nil {
@@ -54,7 +68,7 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 	}
 
 	// Create the source in the repository
-	source, err = s.sourceRepo.Create(ctx, source)
+	source, err = s.sourceRepo.Add(ctx, source)
 	if err != nil {
 		return nil, err
 	}

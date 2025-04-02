@@ -53,11 +53,11 @@ func (c *MySQLSourceConfig) AsBytes() ([]byte, error) {
 }
 
 // GenerateOutputs generates SourceOutput instances based on captured collections.
-func (c *MySQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceOutput, error) {
-	outputs := make([]SourceOutput, 0)
+func (c *MySQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceOutput, error) {
+	outputs := make([]*SourceOutput, 0)
 	for db, tables := range c.CapturedCollections {
 		for table, columns := range tables {
-			outputs = append(outputs, *NewSourceOutput(
+			outputs = append(outputs, NewSourceOutput(
 				tenantID,
 				sourceID,
 				db, // Database name from CapturedCollections
