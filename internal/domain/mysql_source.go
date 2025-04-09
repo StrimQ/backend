@@ -52,12 +52,12 @@ func (c *MySQLSourceConfig) AsBytes() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-// GenerateOutputs generates SourceOutput instances based on captured collections.
-func (c *MySQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceOutput, error) {
-	outputs := make([]*SourceOutput, 0)
+// GenerateCollections generates SourceCollection instances based on captured collections.
+func (c *MySQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error) {
+	collections := make([]*SourceCollection, 0)
 	for db, tables := range c.CapturedCollections {
 		for table, columns := range tables {
-			outputs = append(outputs, NewSourceOutput(
+			collections = append(collections, NewSourceCollection(
 				tenantID,
 				sourceID,
 				db, // Database name from CapturedCollections
@@ -67,7 +67,7 @@ func (c *MySQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UU
 			))
 		}
 	}
-	return outputs, nil
+	return collections, nil
 }
 
 // GenerateKCConnectorConfig generates Kafka Connect configuration for the MySQL connector.

@@ -27,13 +27,13 @@ func NewUser(tenantID uuid.UUID, userID uuid.UUID) *User {
 }
 
 type Tenant struct {
-	TenantID  string
-	Name      string
-	Domain    string
-	Tier      string
-	InfraID   uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	TenantID      string
+	Name          string
+	Domain        string
+	Tier          string
+	TenantInfraID uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 
 	// Associations
 	Infra *TenantInfra
@@ -49,6 +49,7 @@ func NewTenant(tenantID, name, domain, tier string) *Tenant {
 }
 
 type TenantInfra struct {
+	TenantInfraID     uuid.UUID
 	Name              string
 	KafkaBrokers      []string
 	SchemaRegistryURL string

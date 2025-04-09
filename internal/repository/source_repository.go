@@ -20,7 +20,7 @@ func NewSourceRepository(db *pgxpool.Pool) *SourceRepository {
 	return &SourceRepository{db}
 }
 
-// Add inserts a new source into the database along with its outputs and topics.
+// Add inserts a new source into the database along with its collections and topics.
 func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*domain.Source, error) {
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
@@ -47,9 +47,9 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 		return nil, fmt.Errorf("failed to insert source: %w", err)
 	}
 
-	for _, output := range source.Outputs {
+	for _, collection := range source.Collections {
 		// Generate and insert the topic
-		topic := output.Topic
+		topic := collection.Topic
 
 		_, err = tx.Exec(ctx, `
 			INSERT INTO topic (tenant_id, topic_id, name, producer_type, producer_id)
@@ -59,20 +59,20 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 			return nil, fmt.Errorf("failed to insert topic: %w", err)
 		}
 
-		// Serialize the output config
-		outputConfigJSON, err := json.Marshal(output.Config)
+		// Serialize the collection config
+		collectionConfigJSON, err := json.Marshal(collection.Config)
 		if err != nil {
-			return nil, fmt.Errorf("failed to serialize output config: %w", err)
+			return nil, fmt.Errorf("failed to serialize collection config: %w", err)
 		}
 
-		// Insert the source output
+		// Insert the source collection
 		_, err = tx.Exec(ctx, `
-			INSERT INTO source_output (tenant_id, source_id, topic_id, database_name, group_name, collection_name, config)
+			INSERT INTO source_collection (tenant_id, source_id, topic_id, database_name, group_name, collection_name, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, source.TenantID, source.SourceID, topic.TopicID, output.DatabaseName,
-			output.GroupName, output.CollectionName, outputConfigJSON)
+		`, source.TenantID, source.SourceID, topic.TopicID, collection.DatabaseName,
+			collection.GroupName, collection.CollectionName, collectionConfigJSON)
 		if err != nil {
-			return nil, fmt.Errorf("failed to insert source output: %w", err)
+			return nil, fmt.Errorf("failed to insert source collection: %w", err)
 		}
 	}
 

@@ -85,23 +85,23 @@ func (c *PostgreSQLSourceConfig) AsBytes() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c *PostgreSQLSourceConfig) GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceOutput, error) {
-	// Generate outputs based on the captured collections
+func (c *PostgreSQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error) {
+	// Generate collections based on the captured collections
 	// and their respective columns.
-	outputs := make([]*SourceOutput, 0)
-	for group, collections := range c.CapturedCollections {
-		for collection, columns := range collections {
-			outputs = append(outputs, NewSourceOutput(
+	collections := make([]*SourceCollection, 0)
+	for groupName, collWithCols := range c.CapturedCollections {
+		for collName, columns := range collWithCols {
+			collections = append(collections, NewSourceCollection(
 				tenantID,
 				sourceID,
 				c.DBName,
-				group,
-				collection,
+				groupName,
+				collName,
 				map[string]any{"columns": columns},
 			))
 		}
 	}
-	return outputs, nil
+	return collections, nil
 }
 
 func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {

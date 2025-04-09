@@ -23,7 +23,7 @@ type Source struct {
 	UpdatedAt       time.Time
 
 	// Associations
-	Outputs []*SourceOutput
+	Collections []*SourceCollection
 }
 
 func NewSource(
@@ -56,8 +56,8 @@ func (s *Source) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-func (s *Source) GenerateOutputs() ([]*SourceOutput, error) {
-	return s.Config.GenerateOutputs(s.TenantID, s.SourceID)
+func (s *Source) GenerateCollections() ([]*SourceCollection, error) {
+	return s.Config.GenerateCollections(s.TenantID, s.SourceID)
 }
 
 func (s *Source) GenerateKCConnectorName() string {
@@ -75,11 +75,11 @@ func (s *Source) GenerateKCConnectorConfig() (map[string]string, error) {
 type SourceConfig interface {
 	Validate(validate *validator.Validate) error
 	AsBytes() ([]byte, error)
-	GenerateOutputs(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceOutput, error)
+	GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error)
 	GenerateKCConnectorConfig() (map[string]string, error)
 }
 
-type SourceOutput struct {
+type SourceCollection struct {
 	TenantID       uuid.UUID
 	SourceID       uuid.UUID
 	TopicID        uuid.UUID
@@ -94,15 +94,15 @@ type SourceOutput struct {
 	Topic *Topic
 }
 
-func NewSourceOutput(
+func NewSourceCollection(
 	tenantID uuid.UUID,
 	sourceID uuid.UUID,
 	databaseName string,
 	groupName string,
 	collectionName string,
 	config map[string]any,
-) *SourceOutput {
-	return &SourceOutput{
+) *SourceCollection {
+	return &SourceCollection{
 		TenantID:       tenantID,
 		SourceID:       sourceID,
 		DatabaseName:   databaseName,
@@ -112,13 +112,13 @@ func NewSourceOutput(
 	}
 }
 
-func (o *SourceOutput) GenerateTopic() (*Topic, error) {
+func (o *SourceCollection) GenerateTopic() (*Topic, error) {
 	topicID, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	// Generate the topic name from the output
+	// Generate the topic name from the collection
 	nameParts := []string{
 		o.TenantID.String(),
 		o.SourceID.String(),
