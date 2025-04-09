@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const ContextKey_User ContextKey = "user"
-
 type User struct {
 	TenantID  uuid.UUID
 	UserID    uuid.UUID

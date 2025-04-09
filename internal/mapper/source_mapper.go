@@ -14,7 +14,7 @@ import (
 // SourceReqDTOToDomain maps a SourceReqDTO to a domain.Source.
 func SourceReqDTOToDomain(ctx context.Context, sourceReqDTO *dto.SourceReqDTO) (*domain.Source, error) {
 	// Extract user from context
-	user, ok := ctx.Value(domain.ContextKey_User).(*domain.User)
+	user, ok := ctx.Value(enum.ContextKey_User).(*domain.User)
 	if !ok || user == nil {
 		return nil, &ErrUserNotFound{}
 	}

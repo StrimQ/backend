@@ -5,6 +5,7 @@ import (
 
 	"github.com/StrimQ/backend/internal/client"
 	"github.com/StrimQ/backend/internal/dto"
+	"github.com/StrimQ/backend/internal/enum"
 	"github.com/StrimQ/backend/internal/mapper"
 	"github.com/StrimQ/backend/internal/repository"
 	"github.com/go-playground/validator/v10"
@@ -62,7 +63,10 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 	}
 
 	// Create the connector in Kafka Connect
-	kcClient := client.NewKafkaConnectClient("http://kafka-connect:8083", 10)
+	kcClient, ok := ctx.Value(enum.ContextKey_KCClient).(*client.KafkaConnectClient)
+	if !ok {
+		return nil, &ErrKCClientNotFound{}
+	}
 	if err := kcClient.CreateConnnector(ctx, source.GenerateKCConnectorName(), sourceKCConfig); err != nil {
 		return nil, err
 	}

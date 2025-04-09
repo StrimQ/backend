@@ -22,7 +22,7 @@ package repository
 // // based on the UserID from the context (derived from JWT).
 // func (r *UserRepository) Get(ctx context.Context) (domain.User, error) {
 // 	// Extract user information from context (assumed to come from JWT)
-// 	user, ok := ctx.Value(domain.ContextKey_User).(*domain.User)
+// 	user, ok := ctx.Value(enum.ContextKey_User).(*domain.User)
 // 	if !ok || user == nil {
 // 		return domain.User{}, &UserNotFoundErr{}
 // 	}

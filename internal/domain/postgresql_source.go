@@ -106,18 +106,21 @@ func (c *PostgreSQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceI
 
 func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {
 	kcConfig := map[string]string{
-		"connector.class":      "io.debezium.connector.postgresql.PostgresConnector",
-		"database.hostname":    c.Hostname,
-		"database.port":        strconv.Itoa(c.Port),
-		"database.user":        c.Username,
-		"database.password":    c.Password,
-		"database.dbname":      c.DBName,
-		"database.sslmode":     string(c.SSLMode),
-		"slot.name":            c.SlotName,
-		"publication.name":     c.PublicationName,
-		"binary.handling.mode": string(c.BinaryHandlingMode),
-		"read.only":            strconv.FormatBool(c.ReadOnly),
-		"snapshot.mode":        "no_data",
+		"connector.class":             "io.debezium.connector.postgresql.PostgresConnector",
+		"database.hostname":           c.Hostname,
+		"database.port":               strconv.Itoa(c.Port),
+		"database.user":               c.Username,
+		"database.password":           c.Password,
+		"database.dbname":             c.DBName,
+		"database.sslmode":            string(c.SSLMode),
+		"slot.name":                   c.SlotName,
+		"publication.name":            c.PublicationName,
+		"binary.handling.mode":        string(c.BinaryHandlingMode),
+		"read.only":                   strconv.FormatBool(c.ReadOnly),
+		"snapshot.mode":               "no_data",
+		"errors.tolerance":            "none",
+		"errors.log.enable":           "true",
+		"errors.log.include.messages": "false",
 	}
 
 	tableIncludeList := make([]string, 0)
