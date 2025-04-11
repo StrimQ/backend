@@ -1,0 +1,3 @@
+[submodule "kafka-connect-plugins"]
+	path = kafka-connect-plugins
+	url = ../kafka-connect-plugins.git
