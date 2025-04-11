@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/api",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env.local"
         }
     ]
 }

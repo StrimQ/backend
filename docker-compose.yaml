@@ -14,7 +14,7 @@ services:
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
     volumes:
-      - 'kafka0_data:/bitnami/kafka'
+      - 'kafka0-data:/bitnami/kafka'
   kafka-1:
     image: docker.io/bitnami/kafka:3.9.0
     environment:
@@ -30,7 +30,7 @@ services:
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
     volumes:
-      - 'kafka1_data:/bitnami/kafka'
+      - 'kafka1-data:/bitnami/kafka'
   schema-registry:
     image: docker.io/bitnami/schema-registry:7.8.0
     ports:
@@ -60,6 +60,8 @@ services:
       CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
       CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
       CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect'
+    volumes:
+      - ./kafka-connect-plugins/source/postgresql/debezium-connector-postgres-3.1.0:/usr/share/confluent-hub-components/debezium-connector-postgres-3.1.0:ro
   kafbat-ui:
     image: ghcr.io/kafbat/kafka-ui:latest
     ports:
@@ -86,11 +88,24 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - 'postgresql_data:/var/lib/postgresql/data'
+      - 'postgresql-data:/var/lib/postgresql/data'
+  test-postgresql:
+    image: postgres:17.4
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: strimqadmin_1234
+    command: postgres -c wal_level=logical
+    ports:
+      - '5433:5432'
+    volumes:
+      - 'test-postgresql-data:/var/lib/postgresql/data'
 volumes:
-  kafka0_data:
+  kafka0-data:
     driver: local
-  kafka1_data:
+  kafka1-data:
     driver: local
-  postgresql_data:
+  postgresql-data:
+    driver: local
+  test-postgresql-data:
     driver: local

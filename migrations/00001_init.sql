@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 CREATE TYPE "tenant_tier" AS ENUM (
   'free_trial',
   'bronze',
@@ -33,11 +35,18 @@ CREATE TABLE "tenant" (
 );
 
 CREATE TABLE "users" (
-  "tenant_id" UUID,
   "user_id" UUID,
   "created_at" timestamp NOT NULL DEFAULT (NOW()),
   "updated_at" timestamp NOT NULL DEFAULT (NOW()),
-  PRIMARY KEY ("tenant_id", "user_id")
+  PRIMARY KEY ("user_id")
+);
+
+CREATE TABLE "user_tenant" (
+  "user_id" UUID,
+  "tenant_id" UUID,
+  "created_at" timestamp NOT NULL DEFAULT (NOW()),
+  "updated_at" timestamp NOT NULL DEFAULT (NOW()),
+  PRIMARY KEY ("user_id", "tenant_id")
 );
 
 CREATE TABLE "tenant_infra" (
@@ -76,8 +85,8 @@ CREATE TABLE "topic" (
 );
 
 CREATE TABLE "source" (
-  "source_id" UUID,
   "tenant_id" UUID,
+  "source_id" UUID,
   "name" varchar(255) NOT NULL,
   "engine" source_engine NOT NULL,
   "config" JSONB NOT NULL,
@@ -224,7 +233,9 @@ CREATE TABLE "transformer_destination_stream" (
 
 ALTER TABLE "tenant" ADD FOREIGN KEY ("tenant_infra_id") REFERENCES "tenant_infra" ("tenant_infra_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "users" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "user_tenant" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE "user_tenant" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE "tag" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
 
@@ -280,26 +291,48 @@ ALTER TABLE "destination_tag" ADD FOREIGN KEY ("tenant_id", "destination_id") RE
 
 ALTER TABLE "destination_tag" ADD FOREIGN KEY ("tenant_id", "tag_id") REFERENCES "tag" ("tenant_id", "tag_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_destination_stream" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source_destination_stream" ADD FOREIGN KEY ("tenant_id", "source_id") REFERENCES "source" ("tenant_id", "source_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_destination_stream" ADD FOREIGN KEY ("source_id") REFERENCES "source" ("source_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source_destination_stream" ADD FOREIGN KEY ("tenant_id", "destination_id") REFERENCES "destination" ("tenant_id", "destination_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_destination_stream" ADD FOREIGN KEY ("destination_id") REFERENCES "destination" ("destination_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source_transformer_stream" ADD FOREIGN KEY ("tenant_id", "source_id") REFERENCES "source" ("tenant_id", "source_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_transformer_stream" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "source_transformer_stream" ADD FOREIGN KEY ("tenant_id", "transformer_id") REFERENCES "transformer" ("tenant_id", "transformer_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_transformer_stream" ADD FOREIGN KEY ("source_id") REFERENCES "source" ("source_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer_recursive_stream" ADD FOREIGN KEY ("tenant_id", "head_transformer_id") REFERENCES "transformer" ("tenant_id", "transformer_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "source_transformer_stream" ADD FOREIGN KEY ("transformer_id") REFERENCES "transformer" ("transformer_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer_recursive_stream" ADD FOREIGN KEY ("tenant_id", "tail_transformer_id") REFERENCES "transformer" ("tenant_id", "transformer_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "transformer_recursive_stream" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer_destination_stream" ADD FOREIGN KEY ("tenant_id", "transformer_id") REFERENCES "transformer" ("tenant_id", "transformer_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE "transformer_recursive_stream" ADD FOREIGN KEY ("head_transformer_id") REFERENCES "transformer" ("transformer_id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "transformer_destination_stream" ADD FOREIGN KEY ("tenant_id", "destination_id") REFERENCES "destination" ("tenant_id", "destination_id") DEFERRABLE INITIALLY DEFERRED;
+-- +goose StatementEnd
 
-ALTER TABLE "transformer_recursive_stream" ADD FOREIGN KEY ("tail_transformer_id") REFERENCES "transformer" ("transformer_id") DEFERRABLE INITIALLY DEFERRED;
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS "source_destination_stream" CASCADE;
+DROP TABLE IF EXISTS "source_transformer_stream" CASCADE;
+DROP TABLE IF EXISTS "transformer_recursive_stream" CASCADE;
+DROP TABLE IF EXISTS "transformer_destination_stream" CASCADE;
+DROP TABLE IF EXISTS "source_tag" CASCADE;
+DROP TABLE IF EXISTS "transformer_tag" CASCADE;
+DROP TABLE IF EXISTS "destination_tag" CASCADE;
+DROP TABLE IF EXISTS "source_collection" CASCADE;
+DROP TABLE IF EXISTS "transformer_input" CASCADE;
+DROP TABLE IF EXISTS "transformer_output" CASCADE;
+DROP TABLE IF EXISTS "destination_collection" CASCADE;
+DROP TABLE IF EXISTS "source" CASCADE;
+DROP TABLE IF EXISTS "transformer" CASCADE;
+DROP TABLE IF EXISTS "destination" CASCADE;
+DROP TABLE IF EXISTS "topic" CASCADE;
+DROP TABLE IF EXISTS "tag" CASCADE;
+DROP TABLE IF EXISTS "user_tenant" CASCADE;
+DROP TABLE IF EXISTS "users" CASCADE;
+DROP TABLE IF EXISTS "tenant" CASCADE;
+DROP TABLE IF EXISTS "tenant_infra" CASCADE;
 
-ALTER TABLE "transformer_destination_stream" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenant" ("tenant_id") DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE "transformer_destination_stream" ADD FOREIGN KEY ("transformer_id") REFERENCES "transformer" ("transformer_id") DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE "transformer_destination_stream" ADD FOREIGN KEY ("destination_id") REFERENCES "destination" ("destination_id") DEFERRABLE INITIALLY DEFERRED;
+DROP TYPE IF EXISTS "tenant_tier" CASCADE;
+DROP TYPE IF EXISTS "topic_producer_type" CASCADE;
+DROP TYPE IF EXISTS "source_engine" CASCADE;
+DROP TYPE IF EXISTS "destination_engine" CASCADE;
+-- +goose StatementEnd

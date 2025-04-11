@@ -57,6 +57,7 @@ func NewApp() *App {
 func addMiddlewares(router *chi.Mux) {
 	router.Use(chimw.Recoverer)
 	router.Use(middleware.Authenticator)
+	router.Use(middleware.InjectKCClient)
 }
 
 func addRoutes(router *chi.Mux, sourceController *controller.SourceController) {

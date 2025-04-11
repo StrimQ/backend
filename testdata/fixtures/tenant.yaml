@@ -2,4 +2,4 @@
   name: Test Tenant
   domain: test.tenant
   tier: gold
-  infra_id: ffffffff-ffff-ffff-ffff-ffffffffffff
+  tenant_infra_id: ffffffff-ffff-ffff-ffff-ffffffffffff

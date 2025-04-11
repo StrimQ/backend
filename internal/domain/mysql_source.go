@@ -71,7 +71,7 @@ func (c *MySQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceID uui
 }
 
 // GenerateKCConnectorConfig generates Kafka Connect configuration for the MySQL connector.
-func (c *MySQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {
+func (c *MySQLSourceConfig) GenerateKCConnectorConfig(kcConnectorName string) (map[string]string, error) {
 	kcConfig := map[string]string{
 		"connector.class":                          "io.debezium.connector.mysql.MySqlConnector",
 		"database.hostname":                        c.Host,

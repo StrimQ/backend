@@ -11,17 +11,12 @@
   - [golangci-lint](https://golangci-lint.run/): version 2.0.2
   - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports): version 0.31.0
   - [go-testfixtures] (https://github.com/go-testfixtures/testfixtures): version 3.14.0
+  - [goose] (https://github.com/pressly/goose): version 3.24.2
 
 You can install these tools with:
 
 ```bash
 make install-prerequisites
-```
-
-To install the pre-commit hooks, run:
-
-```bash
-make install-precommit-hooks
 ```
 
 ## Deploy Infrastructure
@@ -43,7 +38,7 @@ This command will start the Docker containers defined in the `docker-compose.yml
 To load mock data into the PostgreSQL database, run:
 
 ```bash
-make load-mock-data
+make load-mock-db
 ```
 
 This command will use testfixtures to load mock data defined in `testdata/fixtures` directory into the PostgreSQL database.
@@ -68,9 +63,8 @@ make run-local
 
 ```bash
 make install-prerequisites
-make install-precommit-hooks
 make up
-make load-mock-data
+make load-mock-db
 make run-local
 ```
 

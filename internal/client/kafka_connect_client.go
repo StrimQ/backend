@@ -8,21 +8,21 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/StrimQ/backend/internal/constant"
 )
 
 // KafkaConnectClient is a client for interacting with the Kafka Connect REST API.
 type KafkaConnectClient struct {
 	baseURL    string
-	timeout    time.Duration
 	httpClient *http.Client
 }
 
 // NewKafkaConnectClient creates a new KafkaConnectClient.
-func NewKafkaConnectClient(baseURL string, timeout time.Duration) *KafkaConnectClient {
+func NewKafkaConnectClient(baseURL string) *KafkaConnectClient {
 	return &KafkaConnectClient{
 		baseURL:    baseURL,
-		timeout:    timeout,
-		httpClient: &http.Client{Timeout: timeout},
+		httpClient: &http.Client{Timeout: constant.KafkaConnectClientTimeoutMS * time.Millisecond},
 	}
 }
 

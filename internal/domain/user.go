@@ -25,7 +25,7 @@ func NewUser(tenantID uuid.UUID, userID uuid.UUID) *User {
 }
 
 type Tenant struct {
-	TenantID      string
+	TenantID      uuid.UUID
 	Name          string
 	Domain        string
 	Tier          string
@@ -37,7 +37,7 @@ type Tenant struct {
 	Infra *TenantInfra
 }
 
-func NewTenant(tenantID, name, domain, tier string) *Tenant {
+func NewTenant(tenantID uuid.UUID, name, domain, tier string) *Tenant {
 	return &Tenant{
 		TenantID: tenantID,
 		Name:     name,

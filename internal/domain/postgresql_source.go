@@ -26,11 +26,11 @@ type PostgreSQLSourceConfig struct {
 	SlotName                 string                         `json:"slotName" validate:"required"`
 	PublicationName          string                         `json:"publicationName" validate:"required"`
 	BinaryHandlingMode       enum.SourceBinaryHandlingMode  `json:"binaryHandlingMode" validate:"omitempty,oneof=bytes base64 base64-url-safe hex"`
+	ReadOnly                 bool                           `json:"readOnly"`
 	HeartbeatEnabled         bool                           `json:"heartbeatEnabled"`
 	HeartbeatIntervalMinutes int                            `json:"heartbeatIntervalMinutes,omitempty"`
 	HeartbeatSchema          string                         `json:"heartbeatSchema,omitempty"`
 	HeartbeatTable           string                         `json:"heartbeatTable,omitempty"`
-	ReadOnly                 bool                           `json:"readOnly"`
 	SnapshotSignalSchema     string                         `json:"snapshotSignalSchema,omitempty"`
 	SnapshotSignalTable      string                         `json:"snapshotSignalTable,omitempty"`
 	CapturedCollections      map[string]map[string][]string `json:"capturedCollections" validate:"required"`
@@ -104,7 +104,7 @@ func (c *PostgreSQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceI
 	return collections, nil
 }
 
-func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig() (map[string]string, error) {
+func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig(kcConnectorName string) (map[string]string, error) {
 	kcConfig := map[string]string{
 		"connector.class":             "io.debezium.connector.postgresql.PostgresConnector",
 		"database.hostname":           c.Hostname,
@@ -117,6 +117,9 @@ func (c *PostgreSQLSourceConfig) GenerateKCConnectorConfig() (map[string]string,
 		"publication.name":            c.PublicationName,
 		"binary.handling.mode":        string(c.BinaryHandlingMode),
 		"read.only":                   strconv.FormatBool(c.ReadOnly),
+		"topic.prefix":                kcConnectorName,
+		"plugin.name":                 "pgoutput",
+		"publication.autocreate.mode": "filtered",
 		"snapshot.mode":               "no_data",
 		"errors.tolerance":            "none",
 		"errors.log.enable":           "true",

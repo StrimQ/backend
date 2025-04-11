@@ -69,14 +69,14 @@ func (s *Source) GenerateKCConnectorName() string {
 }
 
 func (s *Source) GenerateKCConnectorConfig() (map[string]string, error) {
-	return s.Config.GenerateKCConnectorConfig()
+	return s.Config.GenerateKCConnectorConfig(s.GenerateKCConnectorName())
 }
 
 type SourceConfig interface {
 	Validate(validate *validator.Validate) error
 	AsBytes() ([]byte, error)
 	GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error)
-	GenerateKCConnectorConfig() (map[string]string, error)
+	GenerateKCConnectorConfig(kcConnectorName string) (map[string]string, error)
 }
 
 type SourceCollection struct {
