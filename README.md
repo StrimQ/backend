@@ -33,6 +33,16 @@ This command will start the Docker containers defined in the `docker-compose.yml
 - Kafka + Kafka Connect + Schema Registry: used to stream data from and to tenant's datasources.
 - Kafbat UI: a web-based user interface for managing Kafka topics and connectors, useful for debugging and monitoring.
 
+## Run Migrations
+
+To run database migrations, execute:
+
+```bash
+make migrate-up-db
+```
+
+This command use goose to apply all pending migrations to the PostgreSQL database. The migration files are located in the `migrations` directory.
+
 ## Load Mock Data
 
 To load mock data into the PostgreSQL database, run:
@@ -41,7 +51,7 @@ To load mock data into the PostgreSQL database, run:
 make load-mock-db
 ```
 
-This command will use testfixtures to load mock data defined in `testdata/fixtures` directory into the PostgreSQL database.
+This command uses testfixtures to load mock data defined in `testdata/fixtures` directory into the PostgreSQL database.
 
 ## Run the API
 
@@ -51,7 +61,7 @@ You need to create environment file `.env.local` in the root directory of the pr
 cp .env.example .env.local
 ```
 
-Should you didn't change the default credentials in the `docker-compose.yml` file, you don't need to change anything in the `.env.local` file.
+Should you not change the default credentials in the `docker-compose.yml` file, you don't need to change anything in the `.env.local` file.
 
 To run the API locally:
 
@@ -59,11 +69,14 @@ To run the API locally:
 make run-local
 ```
 
+> ℹ️ For those who use VSCode, you can debug the API using the launch configuration in `.vscode/launch.json`.
+
 ## Summary
 
 ```bash
 make install-prerequisites
 make up
+make migrate-up-db
 make load-mock-db
 make run-local
 ```
@@ -117,7 +130,7 @@ This directory holds private application code, preventing external imports, and 
 
 ### `migrations`
 
-- **`strimq.sql`**: SQL scripts for database schema migrations.
+SQL scripts for database schema migrations.
 
 ### `scripts`
 
@@ -135,12 +148,32 @@ This directory holds private application code, preventing external imports, and 
   - A file may contain multiple related functions or types, but the file name should reflect the primary functionality or type it provides.
   - Domain model files don't need prepending with `_<package>` (e.g., `domain/user.go`, `domain/tenant.go`).
 
+## Error Handling
+
+Always wrap received errors with context using `fmt.Errorf` to provide additional information. In the following code snippet, if `GenerateKCConnectorConfig` returns an error, it will be wrapped with the context `generate Kafka Connect configuration`. Note that there is no attitude towards the context like `failed to generate Kafka Connect configuration` or `could not generate Kafka Connect configuration`, just a simple context that describes what was attempted.
+
+```go
+sourceKCConfig, err := source.GenerateKCConnectorConfig()
+if err != nil {
+  return nil, fmt.Errorf("generate Kafka Connect configuration: %w", err)
+}
+```
+
+For original errors (errors that are created at the target code, instead of being received by the target code), add attitude to the error message. For example, in the following code snippet, we are creating a new error depending on whether `ok` is true or false. There is no received error to propagate.
+
+```go
+kcClient, ok := ctx.Value(enum.ContextKey_KCClient).(*client.KafkaConnectClient)
+if !ok {
+  return nil, fmt.Errorf("failed to get Kafka Connect client from context")
+}
+```
+
 ## Architecture
 
-I'm following a half-baked clean architecture (no over-evangelization), with clear separation of concerns:
+I'm following a half-baked layer architecture (no over-evangelization), with clear separation of concerns:
 
 - **DTO**: Data Transfer Objects for request and response payloads (`dto/`).
-- **Presentation**: HTTP controllers and middleware (`controller/`, `middleware/`).
-- **Domain**: Core business logic and models (`domain/`).
+- **Presentation**: HTTP controllers and middlewares (`controller/`, `middleware/`).
+- **Domain**: Core business models (`domain/`).
 - **Application**: Business rules and services (`service/`).
 - **Infrastructure**: External interactions like databases and clients (`repository/`, `client/`).

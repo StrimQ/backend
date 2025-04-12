@@ -6,6 +6,7 @@ import (
 
 	"github.com/StrimQ/backend/internal/enum"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 // SourceReqDTO represents the configuration for creating a source.
@@ -29,10 +30,10 @@ func (s *SourceReqDTO) Validate(validate *validator.Validate) error {
 }
 
 type SourceRespDTO struct {
+	ID     uuid.UUID         `json:"id"`
 	Name   string            `json:"name"`
 	Engine enum.SourceEngine `json:"engine"`
 	Config json.RawMessage   `json:"config"`
-	Status json.RawMessage   `json:"status"`
 }
 
 // ToIOStream writes the SourceCreate struct into the response body.

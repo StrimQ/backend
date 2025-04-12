@@ -1,0 +1,36 @@
+POST http://localhost:3000/sources
+Content-Type: application/json
+
+{
+  "name": "Test PostgreSQL Source",
+  "engine": "postgresql",
+    "config": {
+        "hostname": "test-postgresql",
+        "port": 5432,
+        "username": "postgres",
+        "password": "strimqadmin_1234",
+        "dbName": "postgres",
+        "sslMode": "disable",
+        "slotName": "strimq_replication_slot",
+        "publicationName": "strimq_publication",
+        "binaryHandlingMode": "bytes",
+        "readOnly": true,
+        "heartbeatEnabled": false,
+        "capturedCollections": {
+            "public": {
+                "customers": [
+                    "id",
+                    "name",
+                    "email",
+                    "created_at"
+                ],
+                "orders": [
+                    "id",
+                    "customer_id",
+                    "order_date",
+                    "total"
+                ]
+            }
+        }
+    }
+}

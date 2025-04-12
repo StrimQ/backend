@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/StrimQ/backend/internal/client"
 	"github.com/StrimQ/backend/internal/dto"
@@ -28,30 +29,30 @@ TODO:
 func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqDTO) (*dto.SourceRespDTO, error) {
 	// Validate the source request DTO
 	if err := sourceReqDTO.Validate(s.validate); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate source request DTO: %w", err)
 	}
 
 	// Map the source request DTO to a domain.Source
 	source, err := mapper.SourceReqDTOToDomain(ctx, sourceReqDTO)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("map source request DTO to domain: %w", err)
 	}
 
 	// Validate the source domain
 	if err := source.Validate(s.validate); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate source domain: %w", err)
 	}
 
 	// Generate collections and topics for the source
 	collections, err := source.GenerateCollections()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generate collections for source: %w", err)
 	}
 	source.Collections = collections
 	for _, collection := range collections {
 		topic, err := collection.GenerateTopic()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("generate topic for collection: %w", err)
 		}
 		collection.Topic = topic
 	}
@@ -59,33 +60,33 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 	// Generate Kafka Connect configuration
 	sourceKCConfig, err := source.GenerateKCConnectorConfig()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generate Kafka Connect configuration: %w", err)
 	}
 
 	// Create the connector in Kafka Connect
 	kcClient, ok := ctx.Value(enum.ContextKey_KCClient).(*client.KafkaConnectClient)
 	if !ok {
-		return nil, &ErrKCClientNotFound{}
+		return nil, fmt.Errorf("failed to get Kafka Connect client from context")
 	}
 	if err := kcClient.CreateConnnector(ctx, source.GenerateKCConnectorName(), sourceKCConfig); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create Kafka Connect connector: %w", err)
 	}
 
 	// Create the source in the repository
 	source, err = s.sourceRepo.Add(ctx, source)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("add source to repository: %w", err)
 	}
 
 	// Map the source domain to a source response DTO
 	sourceRespDTO, err := mapper.SourceDomainToRespDTO(source)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("map source domain to response DTO: %w", err)
 	}
 
 	// Validate the source response DTO
 	if err := sourceRespDTO.Validate(s.validate); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate source response DTO: %w", err)
 	}
 
 	return sourceRespDTO, nil

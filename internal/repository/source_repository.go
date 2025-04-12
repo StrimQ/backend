@@ -25,16 +25,15 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 	// Begin a transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+		return nil, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer func() {
 		_ = tx.Rollback(ctx) // Rollback if not committed
 	}()
 
-	// Serialize the source config to JSON
-	configJSON, err := source.Config.AsBytes()
+	configBytes, err := source.Config.AsBytes()
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize source config: %w", err)
+		return nil, fmt.Errorf("serialize source config: %w", err)
 	}
 
 	// Insert the source into the database
@@ -42,9 +41,9 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 		INSERT INTO source (tenant_id, source_id, name, engine, config, created_by_user_id, updated_by_user_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`, source.TenantID, source.SourceID, source.Name, source.Engine,
-		configJSON, source.CreatedByUserID, source.UpdatedByUserID)
+		configBytes, source.CreatedByUserID, source.UpdatedByUserID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to insert source: %w", err)
+		return nil, fmt.Errorf("insert source: %w", err)
 	}
 
 	for _, collection := range source.Collections {
@@ -56,13 +55,13 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 			VALUES ($1, $2, $3, $4, $5)
 		`, source.TenantID, topic.TopicID, topic.Name, enum.TopicProducerType_Source, source.SourceID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to insert topic: %w", err)
+			return nil, fmt.Errorf("insert topic: %w", err)
 		}
 
 		// Serialize the collection config
 		collectionConfigJSON, err := json.Marshal(collection.Config)
 		if err != nil {
-			return nil, fmt.Errorf("failed to serialize collection config: %w", err)
+			return nil, fmt.Errorf("serialize collection config: %w", err)
 		}
 
 		// Insert the source collection
@@ -72,13 +71,13 @@ func (r *SourceRepository) Add(ctx context.Context, source *domain.Source) (*dom
 		`, source.TenantID, source.SourceID, topic.TopicID, collection.DatabaseName,
 			collection.GroupName, collection.CollectionName, collectionConfigJSON)
 		if err != nil {
-			return nil, fmt.Errorf("failed to insert source collection: %w", err)
+			return nil, fmt.Errorf("insert source collection: %w", err)
 		}
 	}
 
 	// Commit the transaction
 	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+		return nil, fmt.Errorf("commit transaction: %w", err)
 	}
 
 	return source, nil
