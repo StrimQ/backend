@@ -48,14 +48,15 @@ func (s *SourceService) Create(ctx context.Context, sourceReqDTO *dto.SourceReqD
 	if err != nil {
 		return nil, fmt.Errorf("generate collections for source: %w", err)
 	}
-	source.Collections = collections
-	for _, collection := range collections {
-		topic, err := collection.GenerateTopic()
+
+	for i := range collections {
+		topic, err := collections[i].GenerateTopic()
 		if err != nil {
 			return nil, fmt.Errorf("generate topic for collection: %w", err)
 		}
-		collection.Topic = topic
+		collections[i].Topic = *topic
 	}
+	source.Collections = collections
 
 	// Generate Kafka Connect configuration
 	sourceKCConfig, err := source.GenerateKCConnectorConfig()

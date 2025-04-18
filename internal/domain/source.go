@@ -23,7 +23,7 @@ type Source struct {
 	UpdatedAt       time.Time
 
 	// Associations
-	Collections []*SourceCollection
+	Collections []SourceCollection
 }
 
 func NewSource(
@@ -56,7 +56,7 @@ func (s *Source) Validate(validate *validator.Validate) error {
 	return nil
 }
 
-func (s *Source) GenerateCollections() ([]*SourceCollection, error) {
+func (s *Source) GenerateCollections() ([]SourceCollection, error) {
 	return s.Config.GenerateCollections(s.TenantID, s.SourceID)
 }
 
@@ -75,7 +75,7 @@ func (s *Source) GenerateKCConnectorConfig() (map[string]string, error) {
 type SourceConfig interface {
 	Validate(validate *validator.Validate) error
 	AsBytes() ([]byte, error)
-	GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error)
+	GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceCollection, error)
 	GenerateKCConnectorConfig(kcConnectorName string) (map[string]string, error)
 }
 
@@ -91,7 +91,7 @@ type SourceCollection struct {
 	UpdatedAt      time.Time
 
 	// Associations
-	Topic *Topic
+	Topic Topic
 }
 
 func NewSourceCollection(

@@ -85,13 +85,13 @@ func (c *PostgreSQLSourceConfig) AsBytes() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c *PostgreSQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]*SourceCollection, error) {
+func (c *PostgreSQLSourceConfig) GenerateCollections(tenantID uuid.UUID, sourceID uuid.UUID) ([]SourceCollection, error) {
 	// Generate collections based on the captured collections
 	// and their respective columns.
-	collections := make([]*SourceCollection, 0)
+	collections := make([]SourceCollection, 0)
 	for groupName, collWithCols := range c.CapturedCollections {
 		for collName, columns := range collWithCols {
-			collections = append(collections, NewSourceCollection(
+			collections = append(collections, *NewSourceCollection(
 				tenantID,
 				sourceID,
 				c.DBName,
